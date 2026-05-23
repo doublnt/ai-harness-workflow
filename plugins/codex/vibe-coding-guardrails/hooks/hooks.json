@@ -1,0 +1,63 @@
+{
+  "description": "Vibe Coding Guardrails v2 lifecycle hooks. Blocks dangerous tools and reminds the agent to complete risk/test summaries.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/scripts/guardrails-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/scripts/guardrails-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/scripts/guardrails-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/scripts/guardrails-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/scripts/guardrails-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

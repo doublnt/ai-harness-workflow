@@ -1,33 +1,37 @@
 {
   "name": "vibe-coding-guardrails",
-  "version": "0.1.0",
-  "description": "Pure skills for AI development governance in Codex: project initialization, risk gates, design review, code review, test planning, security review, and release checks.",
+  "version": "0.2.0",
+  "description": "Closed-loop AI development governance for Codex: skills, lifecycle hooks, risk gates, Git hooks, CI gates, docs drift, and release checks.",
   "author": {
-    "name": "Vibe Coding Guardrails Contributors",
-    "url": "https://github.com/your-org/vibe-coding-guardrails"
+    "name": "Vibe Guardrails Contributors",
+    "url": "https://github.com/your-org"
   },
   "homepage": "https://github.com/your-org/vibe-coding-guardrails",
   "repository": "https://github.com/your-org/vibe-coding-guardrails",
   "license": "MIT",
   "keywords": [
-    "skills",
     "governance",
+    "hooks",
+    "skills",
     "code-review",
     "testing",
-    "security",
-    "release"
+    "security"
   ],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Vibe Coding Guardrails",
-    "shortDescription": "Governance gates for AI-assisted coding.",
-    "longDescription": "Initialize project-specific AI development guardrails, classify task risk, review designs and code, plan tests, review security, and check release readiness. Pure skills only: no hooks, no MCP, no app connectors.",
-    "developerName": "Vibe Coding Guardrails Contributors",
+    "shortDescription": "Closed-loop governance gates for AI-assisted coding.",
+    "longDescription": "Initialize repository-specific AI development guardrails, classify task risk, run design/code/test/security/release gates, and enforce deterministic checks with hooks and CI.",
+    "developerName": "Vibe Guardrails Contributors",
     "category": "Developer Tools",
     "capabilities": [
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/your-org/vibe-coding-guardrails"
+    "defaultPrompt": [
+      "Use Vibe Coding Guardrails to initialize this repository.",
+      "Use Vibe Coding Guardrails to review this diff before merge."
+    ]
   }
 }

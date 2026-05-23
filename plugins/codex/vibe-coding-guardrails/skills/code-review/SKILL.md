@@ -52,3 +52,14 @@ Rollback Readiness:
 Unknowns:
 Verdict: Pass / Needs Changes / Blocked
 ```
+
+## V2 Closed-loop Requirements
+
+When this skill is used in a repository with Vibe Guardrails v2 initialized, also check:
+
+- `.guardrails/config.json`
+- `.guardrails/gates/*.json`
+- `.guardrails/approvals/*.json`
+- Git hook status via `vibe-guardrails doctor` when relevant
+
+For Level 2 or Level 3 changes, produce or update a gate artifact. Do not mark the task complete until risk level, required gates, tests, docs impact, rollback plan, and Unknowns are recorded.

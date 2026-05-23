@@ -1,13 +1,7 @@
 # CLAUDE.md
 
-This repository packages Claude Code and Codex skills for AI coding governance.
+This repository uses AGENTS.md as the shared AI-agent instruction source.
 
-Before changing files, read `AGENTS.md` and keep v1 skills-only:
+@AGENTS.md
 
-- no hooks
-- no MCP
-- no app connectors
-- no plugin runtime scripts
-- no default tool pre-approval
-
-Run `npm test` after modifying plugin manifests or skills.
+For plugin changes, validate both Claude and Codex manifests and hook definitions with `npm run validate`.

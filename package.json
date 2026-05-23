@@ -1,12 +1,40 @@
 {
-  "name": "vibe-coding-guardrails-skills-v1",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vibe-coding-guardrails",
+  "version": "0.2.0",
+  "description": "Closed-loop governance guardrails for AI-assisted coding: skills, lifecycle hooks, Git hooks, CI gates, and deterministic checks.",
   "type": "module",
-  "description": "Pure skills v1 for AI coding governance across Claude Code and Codex.",
-  "scripts": {
-    "test": "node scripts/validate.mjs",
-    "validate": "node scripts/validate.mjs"
+  "bin": {
+    "vibe-guardrails": "./bin/vibe-guardrails.js"
   },
-  "license": "MIT"
+  "scripts": {
+    "test": "node --test",
+    "validate": "node ./scripts/validate.mjs",
+    "check": "npm run validate && npm test",
+    "lint": "node ./scripts/validate.mjs"
+  },
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "claude-code",
+    "codex",
+    "hooks",
+    "skills",
+    "governance",
+    "guardrails",
+    "code-review",
+    "testing"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "plugins/",
+    "templates/",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ]
 }
