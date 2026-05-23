@@ -1,31 +1,33 @@
 # AGENTS.md
 
-This repository builds AnyHarness, an installable AI coding guardrails plugin plus optional closed-loop harness.
+This repository is **AnyHarness v2.2**.
 
-## Required context
+AnyHarness has two planes:
 
-Before changing this repository, read:
+```text
+Native prompt surfaces = instructions the LLM reads
+npx anyharness        = deterministic scanner, installer, checker, and gate runner
+```
 
-- `README.md`
-- `ANYHARNESS.md`
-- `EXAMPLES.md`
-- `docs/architecture.md`
-- `docs/safety-model.md`
-- `plugins/claude/anyharness/`
-- `plugins/codex/anyharness/`
+## Main user-facing commands
+
+- `npx anyharness new` — one-command setup for a new project: native prompt surfaces, Git hooks, CI gate, `.anyharness` state.
+- `npx anyharness adopt` — one-command safe adoption for an existing project: advisory mode, draft-first, no hooks or CI.
+- `npx anyharness adopt --enforce` — full harness setup for an existing project after review.
+
+## Native prompt surfaces
+
+AnyHarness deliberately avoids a custom top-level `ANYHARNESS.md` file. Use the instruction file that your AI client already loads:
+
+- Codex: `AGENTS.md`
+- Claude Code: `CLAUDE.md` or `.claude/CLAUDE.md`
+- Cursor: `.cursor/rules/anyharness.mdc`
+- Plugin clients: AnyHarness skills
 
 ## Development rules
 
-1. Keep the lightweight surface simple: `harness-core`, `ANYHARNESS.md`, and examples must remain easy to understand.
-2. Keep the enforcement core deterministic: hooks and CLI checks must not depend on network calls.
-3. Do not read real `.env` files in scanners, tests, or hooks.
-4. Preserve Claude and Codex plugin structures.
-5. Keep Cursor support as a lightweight adapter unless a separate design document is added.
-6. Do not add MCP servers, app connectors, or auto-running background services without explicit design review.
-7. Run `npm run check` before claiming the repository is valid.
-
-## Risk rules
-
-- Plugin manifest, hook, CLI, and security-check changes are L2.
-- Changes that alter blocking behavior are L2 or L3 depending on impact.
-- Marketplace metadata and README changes are usually L1.
+1. Keep changes surgical.
+2. Update both English and Chinese docs when changing user-facing behavior.
+3. If adding a CLI command, update README, README.zh-CN, CLI help, tests, and REPO_CONTENTS.
+4. Do not weaken Red Zone, commit, docs-drift, or gate artifact checks without explaining the trade-off.
+5. Run `npm run check` before finalizing.

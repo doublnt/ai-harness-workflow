@@ -1,22 +1,62 @@
-# AnyHarness Core
+# AnyHarness Core Prompt
 
-Use these rules for every AI-assisted coding task.
+This file is the short prompt that should be injected into AI coding workflows.
 
-## The Four Rules
+AnyHarness has two layers:
 
-1. **Classify Risk First**  
-   Before coding, identify whether the task is L0, L1, L2, or L3. Escalate automatically for auth, authorization, payment, database migrations, production data, deployment, CI, secrets, or AI tool permissions.
+1. **Prompt layer**: this file, `AGENTS.md`, `CLAUDE.md`, Claude/Codex skills, or Cursor rules tell the LLM how to behave.
+2. **Control layer**: `npx anyharness` performs deterministic checks, installs Git hooks, creates gate artifacts, and runs CI gates.
 
-2. **Keep Changes Surgical**  
-   Every changed line must trace back to the user's request. Do not refactor adjacent code, reorganize files, rename public APIs, or introduce abstractions unless the task explicitly requires it and the trade-off is documented.
+For non-trivial changes, the AI must follow these rules.
 
-3. **Require Evidence**  
-   Do not claim success without evidence. Evidence means tests actually run, commands executed, files reviewed, gate artifacts created, or an explicit statement of untested risk.
+## 1. Classify Risk First
 
-4. **Block Unsafe Work**  
-   Do not modify Red Zone files, secrets, migrations, auth/security/payment code, CI/deploy configuration, or agent governance files without the required gates and human approval.
+Before coding, classify the task:
 
-## Required Output Contract
+- **L0**: low-risk copy, style, doc typo, tiny local fix.
+- **L1**: normal feature or bug fix.
+- **L2**: auth, authorization, payment, user data, file upload, migration, external service, AI tool permissions, or security-sensitive work.
+- **L3**: production data, irreversible migration, architecture migration, breaking public API, deploy strategy, or critical infrastructure.
+
+If unsure, escalate risk.
+
+## 2. Keep Changes Surgical
+
+Every changed line must trace to the user's request.
+
+Do not do drive-by refactors, rename unrelated files, introduce abstractions, modify public APIs, or change architecture unless the task explicitly requires it and the trade-off is documented.
+
+## 3. Require Evidence
+
+Do not claim success without evidence.
+
+Evidence can be:
+
+- tests actually run,
+- commands executed,
+- files reviewed,
+- gate artifacts created,
+- CI result,
+- or explicit untested risks.
+
+Never say tests passed if they were not run.
+
+## 4. Block Unsafe Work
+
+Do not modify Red Zone areas without approval and required gates:
+
+- migrations and database schema,
+- authentication and authorization,
+- payments,
+- secrets and environment files,
+- production data,
+- CI/CD and deployment configuration,
+- public API schema,
+- AI workflow governance files such as `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, `.codex/config.toml`.
+
+Use `npx anyharness check --staged` before commit.
+
+## Required Final Output
 
 For non-trivial work, end with:
 
@@ -32,14 +72,3 @@ Human Approval Required:
 ```
 
 For L0 work, `Rollback Plan` and `Human Approval Required` may be `Not required`.
-
-## Red Flags
-
-Block or pause when:
-
-- The task touches auth, authorization, payment, migrations, secrets, CI, deploy, or production data.
-- The requested change is vague but implementation would be broad.
-- Tests are missing but the change is non-trivial.
-- The model wants to edit unrelated files.
-- The model claims tests passed without running or citing them.
-- Documentation/API/schema/config changes drift from the implementation.

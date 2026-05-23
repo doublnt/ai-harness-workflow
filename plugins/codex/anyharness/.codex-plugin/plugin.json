@@ -1,7 +1,7 @@
 {
   "name": "anyharness",
-  "version": "0.3.0",
-  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
+  "version": "2.2.0",
+  "description": "Prompt injection and enforcement harness for AI coding agents: skills, hooks, project rules, Git gates, and CI checks.",
   "author": {
     "name": "AnyHarness Contributors"
   },
@@ -22,8 +22,8 @@
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "AnyHarness",
-    "shortDescription": "AI coding guardrails for safe, evidence-backed changes.",
-    "longDescription": "Use lightweight skills for everyday coding behavior or initialize a closed-loop harness with hooks, Git hooks, CI gates, gate artifacts, approvals, and docs drift checks.",
+    "shortDescription": "Prompt injection and enforcement harness for AI coding.",
+    "longDescription": "Use AnyHarness to inject LLM-facing prompts into Claude, Codex, AGENTS.md, CLAUDE.md, Cursor rules, and to enforce gates with hooks, Git hooks, CI, gate artifacts, approvals, and docs drift checks.",
     "developerName": "AnyHarness Contributors",
     "category": "Developer Tools",
     "capabilities": [
@@ -31,8 +31,9 @@
       "Write"
     ],
     "defaultPrompt": [
+      "Inject AnyHarness core rules into this repository.",
       "Use AnyHarness core rules for this change.",
-      "Use AnyHarness to initialize this repository.",
+      "Use AnyHarness to initialize this repository and recommend the right profile.",
       "Use AnyHarness to review this diff before commit."
     ]
   }

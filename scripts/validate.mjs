@@ -47,17 +47,22 @@ assert(exists('src/cli.mjs'), 'CLI missing');
 assert(exists('templates/project/githooks/pre-commit'), 'pre-commit template missing');
 assert(exists('templates/project/github-actions/anyharness.yml'), 'CI template missing');
 assert(exists('README.md') && exists('README.zh-CN.md'), 'bilingual README missing');
-assert(exists('ANYHARNESS.md') && exists('ANYHARNESS.zh-CN.md'), 'compact guardrails docs missing');
 assert(exists('EXAMPLES.md') && exists('EXAMPLES.zh-CN.md'), 'examples docs missing');
 assert(exists('adapters/cursor/anyharness.mdc'), 'Cursor adapter missing');
+
+assert(exists('prompts/core.md'), 'core prompt missing');
+assert(exists('prompts/claude.md'), 'Claude prompt missing');
+assert(exists('prompts/codex.md'), 'Codex prompt missing');
+assert(exists('prompts/cursor.md'), 'Cursor prompt missing');
+assert(exists('docs/llm-injection.md'), 'LLM injection docs missing');
 assert(exists('.cursor/rules/anyharness.mdc'), 'repo Cursor rule missing');
 
 const packageJson = json('package.json');
 assert(packageJson.name === 'anyharness', 'package name must be anyharness');
-assert(packageJson.version === '0.3.0', 'package version must be 0.3.0');
+assert(packageJson.version === '2.2.0', 'package version must be 2.2.0');
 
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('Validation passed. final AnyHarness layout is valid.');
+console.log('Validation passed. AnyHarness v2.2 one-command onboarding layout is valid.');

@@ -1,7 +1,7 @@
 {
   "name": "anyharness",
-  "version": "0.3.0",
-  "description": "AnyHarness provides AI coding guardrails with a simple behavioral surface and a closed-loop governance harness for skills, hooks, Git hooks, CI gates, and deterministic checks.",
+  "version": "2.2.0",
+  "description": "AnyHarness is an npx-first AI coding harness: one-command new/adopt onboarding, native Claude/Codex/Cursor prompt injection, hooks, Git gates, CI checks, gate artifacts, approvals, and docs drift.",
   "type": "module",
   "bin": {
     "anyharness": "./bin/anyharness.mjs"
@@ -40,8 +40,6 @@
     "CLAUDE.md",
     "EXAMPLES.md",
     "EXAMPLES.zh-CN.md",
-    "ANYHARNESS.md",
-    "ANYHARNESS.zh-CN.md",
     "LICENSE",
     "README.md",
     "README.zh-CN.md",
@@ -50,7 +48,11 @@
     "docs",
     "plugins",
     "src",
-    "templates"
+    "templates",
+    ".claude-plugin",
+    ".agents",
+    ".cursor",
+    "prompts"
   ],
   "displayName": "AnyHarness",
   "repository": {

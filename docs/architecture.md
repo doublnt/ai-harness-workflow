@@ -1,64 +1,52 @@
 # Architecture
 
-AnyHarness has a simple surface and a closed-loop enforcement core.
+AnyHarness has two planes.
+
+## 1. Native prompt plane
+
+This is what the LLM reads:
 
 ```text
-Lite skill          -> improve AI behavior without repo changes
-Project rules       -> generate CLAUDE.md / AGENTS.md / ANYHARNESS.md
-Agent hooks         -> interrupt risky tool use and incomplete turns
-Git hooks           -> block bad commits locally
-CLI checker         -> deterministic policy engine
-Gate artifacts      -> machine-readable governance state
-CI gates            -> PR / merge enforcement backstop
+CLAUDE.md                       # Claude Code
+AGENTS.md                       # Codex
+.cursor/rules/anyharness.mdc    # Cursor
+skills/*/SKILL.md               # Claude/Codex plugins
+prompts/*.md                    # printable prompt templates
 ```
 
-The design separates model reasoning from deterministic enforcement.
+AnyHarness 2.2 intentionally avoids a custom top-level `ANYHARNESS.md` file.
 
-- Skills help the agent think, plan, review, test, and explain.
-- Hooks interrupt unsafe agent actions while work is happening.
-- Git hooks catch issues before local commit or push.
-- CI gates catch issues even if local hooks are bypassed.
-- Gate artifacts and approval records make L2/L3 decisions auditable.
+## 2. Execution harness plane
 
-## Layers
-
-### Layer 1 — Lite
-
-A compact `harness-core` skill and `ANYHARNESS.md` file.
-
-Use this when you only need behavioral guidance:
+This is what checks, blocks, and records evidence:
 
 ```text
-Classify Risk First
-Keep Changes Surgical
-Require Evidence
-Block Unsafe Work
-```
-
-### Layer 2 — Project
-
-Project-local AI instructions:
-
-```text
-CLAUDE.md
-AGENTS.md
-ANYHARNESS.md
-.anyharness/config.json
-```
-
-Use this when a repository needs stable rules across coding agents.
-
-### Layer 3 — Harness
-
-Closed-loop enforcement:
-
-```text
-Agent lifecycle hooks
+npx anyharness
+agent hooks
 Git hooks
-CI gate
-Gate artifacts
-Approval ledger
-Docs drift checker
+CI gates
+.anyharness/config.json
+.anyharness/baselines/project-scan.json
+.anyharness/gates/*.json
+.anyharness/approvals/*.json
 ```
 
-Use this for teams, production systems, and sensitive code.
+## Flow
+
+```text
+prompt/skill tells the agent what to do
+        ↓
+agent writes or proposes changes
+        ↓
+agent hooks catch unsafe tool use
+        ↓
+Git hooks validate staged changes and commit messages
+        ↓
+CI gates validate PRs and merge readiness
+        ↓
+gate artifacts and approvals preserve evidence
+```
+
+## Why native prompt surfaces?
+
+Claude already loads `CLAUDE.md`; Codex already loads `AGENTS.md`; Cursor already loads `.cursor/rules/*.mdc`. Using these files lowers adoption friction and avoids requiring users to teach every agent about another top-level file.

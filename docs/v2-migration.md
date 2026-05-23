@@ -1,32 +1,55 @@
-# Migration Notes
+# Migration notes for AnyHarness 2.2
 
-Previous iterations separated the project into two ideas:
+AnyHarness 2.2 keeps the native prompt surface model from 2.1 and adds one-command onboarding shortcuts.
 
-- v1: pure skills, no hooks, no repository enforcement.
-- v2: closed-loop harness with hooks, Git hooks, CI gates, gate artifacts, and deterministic checks.
+## From 2.1 to 2.2
 
-The final package keeps the v2 enforcement core but adds a simpler surface:
+### New project
 
-```text
-harness-core skill
-ANYHARNESS.md
-EXAMPLES.md
-Lite / Project / Harness modes
-Cursor lightweight adapter
+Before, the README showed a two-step harness setup:
+
+```bash
+npx anyharness init --profile harness --target both --mode enforcing --install-hooks
+npx anyharness ci-template --write
 ```
 
-## Migration from skills-only
+Now use:
 
-1. Install the final plugin.
-2. Start with `harness-core` for Lite mode.
-3. Run `init-project` when you want project-local rules.
-4. Enable Harness mode only after reviewing hooks and generated policy.
-5. Install Git hooks and CI gates when ready.
+```bash
+npx anyharness new
+```
 
-## Migration from earlier closed-loop versions
+`new` is the new-project shortcut. It initializes harness mode, writes/drafts Claude and Codex native prompt surfaces, installs Git hooks, and writes/drafts the CI workflow.
 
-1. Replace old package references such as `anyharness-v2` with `anyharness`.
-2. Add `harness-core` to plugin skills.
-3. Add `ANYHARNESS.md` and `EXAMPLES.md` to docs.
-4. Review hook behavior and `.anyharness/config.json` mode.
-5. Run `npm run check`.
+### Existing project
+
+Use:
+
+```bash
+npx anyharness adopt
+```
+
+`adopt` is intentionally safe by default. It uses project profile + advisory mode, scans the repo, writes `.anyharness/config.json`, stores a scan baseline, and drafts native prompt changes instead of overwriting existing `CLAUDE.md` or `AGENTS.md`.
+
+Preview first:
+
+```bash
+npx anyharness adopt --dry-run
+```
+
+Enable harness mode for an existing project after review:
+
+```bash
+npx anyharness adopt --enforce
+```
+
+## Still supported
+
+The low-level commands still exist:
+
+```bash
+npx anyharness init --profile harness --target both --mode enforcing --install-hooks
+npx anyharness ci-template --write
+```
+
+However, `ci-template --write` is now an advanced regeneration command. Harness init writes or drafts the CI workflow by default unless `--no-ci` is used.

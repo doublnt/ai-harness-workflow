@@ -1,8 +1,8 @@
 {
   "name": "anyharness",
   "displayName": "AnyHarness",
-  "version": "0.3.0",
-  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
+  "version": "2.2.0",
+  "description": "Prompt injection and enforcement harness for AI coding agents: skills, hooks, project rules, Git gates, and CI checks.",
   "author": {
     "name": "AnyHarness Contributors"
   },

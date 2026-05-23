@@ -6,9 +6,8 @@ AnyHarness hooks run local commands. Review hook definitions before trusting the
 
 | Version | Supported |
 |---|---|
-| 0.3.x | yes |
-| 0.2.x | security fixes only |
-| 0.1.x | unsupported |
+| 2.x | yes |
+| 0.x | unsupported |
 
 ## Reporting Vulnerabilities
 

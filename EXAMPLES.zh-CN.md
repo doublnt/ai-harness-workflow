@@ -1,3 +1,34 @@
+
+## 0. Prompt 注入 vs npx 执行
+
+用户问：
+
+```text
+怎么让 AI 遵守 AnyHarness 规则？
+```
+
+错误心智：
+
+```text
+只要运行 npx anyharness，模型就自动知道规则。
+```
+
+AnyHarness 心智：
+
+```text
+npx anyharness prompt --target core
+```
+
+把打印出来的 prompt 注入给 LLM，或者写入项目本地 prompt surfaces：
+
+```bash
+npx anyharness prompt --target claude --write
+npx anyharness prompt --target codex --write
+npx anyharness adopt
+```
+
+然后用 `npx anyharness check --staged` 或 CI 检查结果。
+
 # 示例
 
 这些例子展示普通 AI 编程和 guardrail-driven AI 编程的区别。

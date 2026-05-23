@@ -1,24 +1,20 @@
-# Final Architecture
+# Final architecture
 
-AnyHarness uses a simple surface and a closed-loop core.
+```text
+Native prompt surfaces
+  ├─ CLAUDE.md
+  ├─ AGENTS.md
+  ├─ .cursor/rules/anyharness.mdc
+  └─ plugin skills
 
-## Surface
+Execution harness
+  ├─ npx anyharness
+  ├─ agent hooks
+  ├─ Git hooks
+  ├─ CI gates
+  ├─ docs drift checker
+  ├─ commit message checker
+  └─ .anyharness artifacts
+```
 
-- `ANYHARNESS.md`
-- `harness-core` skill
-- `EXAMPLES.md`
-- Lite adapters for Claude, Codex, and Cursor
-
-## Core
-
-- project initialization
-- risk classification
-- gate artifacts
-- approval ledger
-- agent lifecycle hooks
-- Git hooks
-- CI gates
-- docs drift detection
-- commit message validation
-
-The design goal is to make the first interaction feel as simple as a coding guideline while allowing production teams to enable hard enforcement.
+AnyHarness does not require a custom top-level prompt file. The only project-specific AnyHarness directory is `.anyharness/`, which stores enforcement state and drafts.

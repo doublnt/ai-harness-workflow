@@ -1,26 +1,14 @@
-# Final Design
+# Final design
 
-The final package uses a simple surface and a strong execution core.
+AnyHarness 2.2 is a native-prompt, npx-enforced AI coding harness.
 
-## Simple surface
+It consists of:
 
-- `harness-core` skill.
-- `ANYHARNESS.md`.
-- `EXAMPLES.md`.
-- Lite/Project/Harness modes.
-- Cursor Lite adapter.
+- native instruction files: `CLAUDE.md`, `AGENTS.md`, Cursor rules;
+- plugin skills for Claude and Codex;
+- optional agent hooks;
+- a deterministic `npx anyharness` CLI;
+- Git hooks and CI gates;
+- gate artifacts and approval records under `.anyharness/`.
 
-## Execution core
-
-- Claude and Codex plugins.
-- Lifecycle hooks.
-- Deterministic CLI checks.
-- Git hooks.
-- CI gates.
-- Gate artifacts.
-- Approval ledger.
-- Docs drift detection.
-
-## Principle
-
-The first user experience should feel lightweight. Enforcement should be opt-in, visible, reviewable, and auditable.
+The design intentionally avoids a separate top-level AnyHarness prompt file. Prompt injection should happen through the AI client's native mechanism.

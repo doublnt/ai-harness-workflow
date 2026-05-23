@@ -2,6 +2,37 @@
 
 These examples show the difference between ordinary vibe coding and guardrail-driven AI coding.
 
+
+## 0. Prompt injection vs npx execution
+
+User asks:
+
+```text
+How do I make the AI follow AnyHarness rules?
+```
+
+Wrong mental model:
+
+```text
+Just run npx anyharness and assume the model now knows the rules.
+```
+
+AnyHarness mental model:
+
+```text
+npx anyharness prompt --target core
+```
+
+Inject the printed prompt into the LLM, or write project-local prompt surfaces:
+
+```bash
+npx anyharness prompt --target claude --write
+npx anyharness prompt --target codex --write
+npx anyharness adopt
+```
+
+Then use `npx anyharness check --staged` or CI to verify the result.
+
 ## 1. Hidden Risk: user export
 
 User asks:

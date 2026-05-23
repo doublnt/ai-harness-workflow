@@ -9,12 +9,15 @@ import { installGitHooks, uninstallGitHooks } from './lib/install-hooks.mjs';
 import { createGate, approveGate, listGateArtifacts } from './lib/gates.mjs';
 import { runAgentHook } from './lib/agent-hook.mjs';
 
-const VERSION = '0.3.0';
+const VERSION = '2.2.0';
 
 export async function main(args) {
   const [cmd, ...rest] = args;
   switch (cmd || 'help') {
     case 'scan': return cmdScan(rest);
+    case 'prompt': return cmdPrompt(rest);
+    case 'new': return cmdNew(rest);
+    case 'adopt': return cmdAdopt(rest);
     case 'init': return cmdInit(rest);
     case 'check': return cmdCheck(rest);
     case 'commit-msg': return cmdCommitMsg(rest);
@@ -38,6 +41,68 @@ export async function main(args) {
 function has(args, flag) { return args.includes(flag); }
 function value(args, flag, fallback = null) { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : fallback; }
 
+function cmdPrompt(args) {
+  const target = value(args, '--target', 'core');
+  const write = has(args, '--write');
+  const targets = expandPromptTargets(target);
+
+  if (!write) {
+    if (targets.length === 1) {
+      console.log(promptContent(targets[0]));
+      return;
+    }
+    for (const t of targets) {
+      console.log(`\n--- ${t} ---\n`);
+      console.log(promptContent(t));
+    }
+    return;
+  }
+
+  const writableTargets = targets.filter((t) => t !== 'core');
+  if (writableTargets.length === 0) {
+    console.error('`--target core --write` is intentionally disabled. The core prompt is copy-paste only. Use --target claude, codex, cursor, both, all, or detect to write native instruction files.');
+    process.exit(1);
+  }
+
+  fs.mkdirSync(path.join(process.cwd(), '.anyharness', 'drafts'), { recursive: true });
+  const created = [];
+  for (const t of writableTargets) {
+    if (t === 'claude') safeWrite('CLAUDE.md', promptContent('claude'), '.anyharness/drafts/CLAUDE.append.md', created);
+    else if (t === 'codex' || t === 'agents') safeWrite('AGENTS.md', promptContent('codex'), '.anyharness/drafts/AGENTS.append.md', created);
+    else if (t === 'cursor') safeWrite('.cursor/rules/anyharness.mdc', promptContent('cursor'), '.anyharness/drafts/anyharness.cursor.mdc', created);
+  }
+  console.log(`Injected native prompt surface(s): ${created.join(', ') || 'none'}`);
+}
+
+function expandPromptTargets(target) {
+  if (target === 'core') return ['core'];
+  if (target === 'claude') return ['claude'];
+  if (target === 'codex' || target === 'agents') return ['codex'];
+  if (target === 'cursor') return ['cursor'];
+  if (target === 'both') return ['claude', 'codex'];
+  if (target === 'all') return ['claude', 'codex', 'cursor'];
+  if (target === 'detect') {
+    const report = scanProject(process.cwd());
+    const out = [];
+    if (report.aiWorkflow.claude) out.push('claude');
+    if (report.aiWorkflow.codex) out.push('codex');
+    if (!report.aiWorkflow.claude && !report.aiWorkflow.codex) out.push('claude', 'codex');
+    return out;
+  }
+  throw new Error('Unknown prompt target. Use --target core|claude|codex|agents|cursor|both|all|detect');
+}
+
+function promptContent(target) {
+  const normalized = target === 'agents' ? 'codex' : target;
+  const file = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'prompts', `${normalized}.md`);
+  if (exists(file)) return readText(file);
+  if (normalized === 'cursor') {
+    const cursor = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'adapters', 'cursor', 'anyharness.mdc');
+    return readText(cursor);
+  }
+  throw new Error('Unknown prompt target. Use --target core|claude|codex|agents|cursor|both|all|detect');
+}
+
 function cmdScan(args) {
   const report = scanProject(process.cwd());
   if (has(args, '--json')) printJson(report);
@@ -50,17 +115,43 @@ function cmdScan(args) {
   }
 }
 
+
+function cmdNew(args) {
+  const target = value(args, '--target', 'both');
+  const mode = value(args, '--mode', 'enforcing');
+  const initArgs = ['--profile', 'harness', '--target', target, '--mode', mode];
+  if (!has(args, '--no-hooks')) initArgs.push('--install-hooks');
+  if (has(args, '--no-ci')) initArgs.push('--no-ci');
+  if (has(args, '--dry-run')) initArgs.push('--dry-run');
+  return cmdInit(initArgs);
+}
+
+function cmdAdopt(args) {
+  const enforce = has(args, '--enforce') || has(args, '--harness');
+  const profile = enforce ? 'harness' : value(args, '--profile', 'project');
+  const target = value(args, '--target', 'detect');
+  const mode = value(args, '--mode', enforce ? 'enforcing' : 'advisory');
+  const initArgs = ['--profile', profile, '--target', target, '--mode', mode];
+  if ((enforce && !has(args, '--no-hooks')) || has(args, '--install-hooks')) initArgs.push('--install-hooks');
+  if (has(args, '--ci')) initArgs.push('--ci');
+  if (has(args, '--no-ci')) initArgs.push('--no-ci');
+  if (has(args, '--dry-run')) initArgs.push('--dry-run');
+  return cmdInit(initArgs);
+}
+
 function cmdInit(args) {
   const profile = value(args, '--profile', 'project');
   const mode = value(args, '--mode', profile === 'harness' ? 'enforcing' : 'advisory');
   const target = value(args, '--target', 'detect');
   const dryRun = has(args, '--dry-run');
   const installHooks = has(args, '--install-hooks');
+  const noCi = has(args, '--no-ci');
+  const writeCi = has(args, '--ci') || (profile === 'harness' && !noCi);
   const report = scanProject(process.cwd());
 
   if (dryRun) {
     console.log('AnyHarness init dry run');
-    printJson({ profile, mode, target, report, wouldCreate: plannedInitFiles(profile, target) });
+    printJson({ profile, mode, target, installHooks, writeCi, report, wouldCreate: plannedInitFiles(profile, target, writeCi, installHooks) });
     return;
   }
 
@@ -70,37 +161,37 @@ function cmdInit(args) {
   writeJson(path.join(process.cwd(), '.anyharness', 'baselines', 'project-scan.json'), report);
 
   const created = [];
-  safeWrite('ANYHARNESS.md', guardrailsCore(), '.anyharness/drafts/ANYHARNESS.md', created);
-
   if (profile === 'project' || profile === 'harness') {
     if (target === 'detect' || target === 'codex' || target === 'both') {
-      safeWrite('AGENTS.md', agentsInstructions(), '.anyharness/drafts/AGENTS.append.md', created);
+      safeWrite('AGENTS.md', promptContent('codex'), '.anyharness/drafts/AGENTS.append.md', created);
     }
     if (target === 'detect' || target === 'claude' || target === 'both') {
-      safeWrite('CLAUDE.md', claudeInstructions(), '.anyharness/drafts/CLAUDE.append.md', created);
+      safeWrite('CLAUDE.md', promptContent('claude'), '.anyharness/drafts/CLAUDE.append.md', created);
     }
   }
 
-  if (profile === 'harness') {
-    writeCiTemplate(true, created);
-    if (installHooks) installGitHooks(process.cwd());
-  }
+  if (writeCi) writeCiTemplate(true, created);
+  if (installHooks) installGitHooks(process.cwd());
 
   console.log(`Initialized AnyHarness ${VERSION} in ${process.cwd()}`);
   console.log(`Profile: ${profile}`);
   console.log(`Mode: ${mode}`);
   console.log(`Target: ${target}`);
+  console.log(`Git hooks: ${installHooks ? 'installed' : 'not installed'}`);
+  console.log(`CI gate: ${writeCi ? 'created or drafted' : 'not created'}`);
   console.log(`Created or drafted: ${created.join(', ') || 'none'}`);
-  if (profile === 'harness' && !installHooks) console.log('Run `anyharness install-hooks` to enable local Git hooks.');
+  if (profile === 'harness' && !installHooks) console.log('Git hooks were not installed. Run `anyharness install-hooks` to enable local Git hooks.');
+  if (profile === 'harness' && noCi) console.log('CI template was skipped because --no-ci was used. Run `anyharness ci-template --write` later if needed.');
 }
 
-function plannedInitFiles(profile, target) {
-  const files = ['.anyharness/config.json', '.anyharness/baselines/project-scan.json', 'ANYHARNESS.md'];
+function plannedInitFiles(profile, target, writeCi = false, installHooks = false) {
+  const files = ['.anyharness/config.json', '.anyharness/baselines/project-scan.json'];
   if (profile === 'project' || profile === 'harness') {
     if (target === 'detect' || target === 'codex' || target === 'both') files.push('AGENTS.md or .anyharness/drafts/AGENTS.append.md');
     if (target === 'detect' || target === 'claude' || target === 'both') files.push('CLAUDE.md or .anyharness/drafts/CLAUDE.append.md');
   }
-  if (profile === 'harness') files.push('.github/workflows/anyharness.yml or .anyharness/drafts/anyharness.yml');
+  if (writeCi) files.push('.github/workflows/anyharness.yml or .anyharness/drafts/anyharness.yml');
+  if (installHooks) files.push('.githooks/pre-commit', '.githooks/commit-msg', '.githooks/pre-push');
   return files;
 }
 
@@ -115,17 +206,6 @@ function safeWrite(rel, content, draftRel, created) {
   }
 }
 
-function guardrailsCore() {
-  return `# AnyHarness Core\n\n1. Classify Risk First.\n2. Keep Changes Surgical.\n3. Require Evidence.\n4. Block Unsafe Work.\n\nFor non-trivial work, end with:\n\n\`\`\`text\nRisk Level:\nAssumptions:\nUnknowns:\nFiles Changed:\nTests:\nSecurity Considerations:\nRollback Plan:\nHuman Approval Required:\n\`\`\`\n\nRed Zone work includes auth, authorization, payment, migrations, secrets, CI/deploy, production data, and AI governance files.\n`;
-}
-
-function agentsInstructions() {
-  return `# AGENTS.md\n\nThis project uses AnyHarness.\n\nBefore implementation:\n\n1. Read ANYHARNESS.md.\n2. Classify task risk: L0, L1, L2, L3.\n3. Keep changes surgical.\n4. Do not modify Red Zone files without human approval.\n5. Do not claim tests passed unless they were actually run.\n6. For L2/L3 work, create gate artifacts under .anyharness/gates and record approval when required.\n\nUse AnyHarness skills for planning, review, testing, security review, and release checks.\n`;
-}
-
-function claudeInstructions() {
-  return `# CLAUDE.md\n\nThis project uses AnyHarness.\n\nRequired reading before changes:\n\n- ANYHARNESS.md\n- .anyharness/config.json, if present\n\nUse the AnyHarness plugin skills:\n\n- /anyharness:harness-core\n- /anyharness:risk-classify\n- /anyharness:new-feature\n- /anyharness:code-review\n- /anyharness:test-plan\n- /anyharness:security-review\n- /anyharness:release-check\n\nDo not modify Red Zone files without explicit approval and required gates.\n`;
-}
 
 function cmdCheck(args) {
   const result = runChecks({ staged: has(args, '--staged'), ci: has(args, '--ci'), push: has(args, '--push') });
@@ -233,5 +313,41 @@ async function cmdHook(args) {
 }
 
 function help() {
-  console.log(`AnyHarness ${VERSION}\n\nModes:\n  Lite     Plugin skill only, no repo enforcement\n  Project  Project-local ANYHARNESS.md + agent instructions\n  Harness  Project-local rules + hooks + CI gate\n\nCommands:\n  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]\n  scan [--json]\n  check [--staged|--ci|--push] [--json]\n  commit-msg <file>\n  install-hooks\n  uninstall-hooks\n  ci-template [--write]\n  cursor-template [--write]\n  gate create --task <text> --risk L2 --gates design,security,test\n  gate approve <gate-id>\n  gate status\n  doctor\n  hook <event>\n`);
+  console.log(`AnyHarness ${VERSION}
+
+Modes:
+  Lite     Copy-paste prompt or plugin skill only, no repo changes
+  Project  Native prompt surfaces: CLAUDE.md / AGENTS.md / Cursor rules
+  Harness  Native prompt surfaces + hooks + Git hooks + CI gates
+
+Commands:
+  new [--target claude|codex|both] [--mode enforcing|strict] [--no-hooks] [--no-ci] [--dry-run]
+      New-project shortcut. Equivalent to harness init + Git hooks + CI template.
+
+  adopt [--target detect|claude|codex|both] [--mode advisory|enforcing|strict] [--dry-run] [--enforce] [--ci] [--install-hooks]
+      Existing-project shortcut. Safe by default; use --enforce to add hooks and CI without overwriting prompt files.
+
+  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--no-ci] [--dry-run]
+      Low-level initializer. Harness profile now writes the CI template by default.
+
+  prompt [--target core|claude|codex|agents|cursor|both|all|detect] [--write]
+  scan [--json]
+  check [--staged|--ci|--push] [--json]
+  commit-msg <file>
+  install-hooks
+  uninstall-hooks
+  ci-template [--write]
+  cursor-template [--write]
+  gate create --task <text> --risk L2 --gates design,security,test
+  gate approve <gate-id>
+  gate status
+  doctor
+  hook <event>
+
+Notes:
+  For a new project, run: npx anyharness new
+  For an existing project, run: npx anyharness adopt
+  prompt --target core prints a copy-paste prompt only. It does not write ANYHARNESS.md.
+  Codex's native repository instruction file is AGENTS.md.
+`);
 }

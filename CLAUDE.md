@@ -1,24 +1,26 @@
 # CLAUDE.md
 
-This repository contains AnyHarness.
+This repository is **AnyHarness v2.2**.
 
-Before changing code, Claude Code should read:
+AnyHarness uses native AI client instruction files instead of a custom `ANYHARNESS.md` file:
 
-- `README.md`
-- `ANYHARNESS.md`
-- `EXAMPLES.md`
-- `docs/architecture.md`
-- `docs/hooks.md`
-- `src/lib/checks.mjs`
-- `plugins/claude/anyharness/README.md`
+- Claude Code reads this `CLAUDE.md`.
+- Codex reads `AGENTS.md`.
+- Cursor reads `.cursor/rules/anyharness.mdc`.
+- Plugins provide AnyHarness skills.
 
-Rules for this repository:
+AnyHarness is npx-first for enforcement: `npx anyharness` scans, writes native prompt surfaces, installs Git hooks, runs CI gates, validates commit messages, checks docs drift, and manages gate artifacts.
 
-1. Keep the project easy to explain: Lite, Project, Harness.
-2. Preserve the closed-loop harness: skills + lifecycle hooks + Git hooks + CI gates + gate artifacts.
-3. Any hook that can block execution must be deterministic, local, and auditable.
-4. Do not add network calls to hooks or checks.
-5. Do not read real `.env` files in tests or scanners.
-6. Preserve Claude and Codex plugin structures.
-7. Keep `harness-core` short and behavior-focused.
-8. Run `npm run check` before claiming validation passed.
+## Main user-facing commands
+
+- `npx anyharness new` — new project, full harness in one command.
+- `npx anyharness adopt` — existing project, safe advisory adoption in one command.
+- `npx anyharness adopt --enforce` — existing project, full harness after review.
+
+Required behavior:
+
+1. Classify risk first.
+2. Keep changes surgical.
+3. Do not claim tests passed unless they were actually run.
+4. Update bilingual docs for user-facing changes.
+5. Run `npm run check` before completion.
