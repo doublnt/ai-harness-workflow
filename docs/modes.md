@@ -1,6 +1,6 @@
 # Modes
 
-Vibe Coding Guardrails has three adoption modes.
+AI Harness Guardrails has three adoption modes.
 
 ## Lite
 

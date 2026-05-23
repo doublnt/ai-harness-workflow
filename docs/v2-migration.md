@@ -25,7 +25,7 @@ Cursor lightweight adapter
 
 ## Migration from earlier closed-loop versions
 
-1. Replace old package references such as `vibe-coding-guardrails-v2` with `vibe-coding-guardrails`.
+1. Replace old package references such as `vibe-coding-guardrails-v2` with `ai-harness-guardrails`.
 2. Add `guardrails-core` to plugin skills.
 3. Add `GUARDRAILS.md` and `EXAMPLES.md` to docs.
 4. Review hook behavior and `.guardrails/config.json` mode.

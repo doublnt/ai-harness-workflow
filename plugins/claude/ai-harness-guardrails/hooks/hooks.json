@@ -1,5 +1,5 @@
 {
-  "description": "Vibe Coding Guardrails lifecycle hooks. Review and trust before enabling.",
+  "description": "AI Harness Guardrails lifecycle hooks. Review and trust before enabling.",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs user-prompt-submit",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs user-prompt-submit",
             "timeout": 10
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs pre-tool-use",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs pre-tool-use",
             "timeout": 10
           }
         ]
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs permission-request",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs permission-request",
             "timeout": 10
           }
         ]
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CODEX_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs stop",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/vibe-hook.mjs stop",
             "timeout": 10
           }
         ]

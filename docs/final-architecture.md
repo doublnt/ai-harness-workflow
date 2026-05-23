@@ -1,6 +1,6 @@
 # Final Architecture
 
-Vibe Coding Guardrails uses a simple surface and a closed-loop core.
+AI Harness Guardrails uses a simple surface and a closed-loop core.
 
 ## Surface
 

@@ -1,4 +1,4 @@
-# Cursor 版 Vibe Coding Guardrails
+# Cursor 版 AI Harness Guardrails
 
 这是 Cursor 的 Lite 适配。把 `.cursor/rules/vibe-guardrails.mdc` 复制到你的项目里，即可获得核心行为护栏。
 

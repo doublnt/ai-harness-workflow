@@ -1,6 +1,6 @@
 # Architecture
 
-Vibe Coding Guardrails has a simple surface and a closed-loop enforcement core.
+AI Harness Guardrails has a simple surface and a closed-loop enforcement core.
 
 ```text
 Lite skill          -> improve AI behavior without repo changes

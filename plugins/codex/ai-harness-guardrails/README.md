@@ -1,4 +1,4 @@
-# Vibe Coding Guardrails Plugin
+# AI Harness Guardrails Plugin
 
 A plugin for AI coding agents that provides:
 

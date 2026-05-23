@@ -1,8 +1,8 @@
-# Vibe Coding Guardrails
+# AI Harness Guardrails
 
 AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.
 
-This repository contains the final version of Vibe Coding Guardrails: a lightweight behavioral skill plus an optional closed-loop governance harness for Claude Code, Codex, Cursor, Git hooks, and CI gates.
+This repository contains the final version of AI Harness Guardrails: a lightweight behavioral skill plus an optional closed-loop governance harness for Claude Code, Codex, Cursor, Git hooks, and CI gates.
 
 ## The Problem
 
@@ -48,23 +48,23 @@ AI coding agents often:
 Add the local marketplace from this repository:
 
 ```text
-/plugin marketplace add ./path/to/vibe-coding-guardrails-final
-/plugin install vibe-coding-guardrails@vibe-guardrails
+/plugin marketplace add ./path/to/ai-harness-guardrails-final
+/plugin install ai-harness-guardrails@vibe-guardrails
 ```
 
 Then use:
 
 ```text
-/vibe-coding-guardrails:guardrails-core
-/vibe-coding-guardrails:init-project
-/vibe-coding-guardrails:risk-classify
-/vibe-coding-guardrails:new-feature
-/vibe-coding-guardrails:design-review
-/vibe-coding-guardrails:implementation-plan
-/vibe-coding-guardrails:code-review
-/vibe-coding-guardrails:test-plan
-/vibe-coding-guardrails:security-review
-/vibe-coding-guardrails:release-check
+/ai-harness-guardrails:guardrails-core
+/ai-harness-guardrails:init-project
+/ai-harness-guardrails:risk-classify
+/ai-harness-guardrails:new-feature
+/ai-harness-guardrails:design-review
+/ai-harness-guardrails:implementation-plan
+/ai-harness-guardrails:code-review
+/ai-harness-guardrails:test-plan
+/ai-harness-guardrails:security-review
+/ai-harness-guardrails:release-check
 ```
 
 ## Install: Codex
@@ -72,15 +72,15 @@ Then use:
 Add the local marketplace:
 
 ```text
-codex plugin marketplace add ./path/to/vibe-coding-guardrails-final
+codex plugin marketplace add ./path/to/ai-harness-guardrails-final
 ```
 
-Then install `vibe-coding-guardrails` from the marketplace and invoke naturally:
+Then install `ai-harness-guardrails` from the marketplace and invoke naturally:
 
 ```text
-Use Vibe Coding Guardrails Core for this coding task.
-Use Vibe Coding Guardrails to initialize this repository.
-Use Vibe Coding Guardrails to review this diff before commit.
+Use AI Harness Guardrails Core for this coding task.
+Use AI Harness Guardrails to initialize this repository.
+Use AI Harness Guardrails to review this diff before commit.
 ```
 
 ## Use With Cursor
@@ -89,7 +89,7 @@ Copy the Lite rule into your project:
 
 ```bash
 mkdir -p .cursor/rules
-cp plugins/cursor/vibe-coding-guardrails/.cursor/rules/vibe-guardrails.mdc .cursor/rules/vibe-guardrails.mdc
+cp plugins/cursor/ai-harness-guardrails/.cursor/rules/vibe-guardrails.mdc .cursor/rules/vibe-guardrails.mdc
 ```
 
 Or print it from the CLI:
@@ -111,8 +111,8 @@ node bin/vibe-guardrails.mjs check --staged
 After npm publishing, use:
 
 ```bash
-npx vibe-coding-guardrails init --profile harness --target detect --install-hooks
-npx vibe-coding-guardrails check --ci
+npx ai-harness-guardrails init --profile harness --target detect --install-hooks
+npx ai-harness-guardrails check --ci
 ```
 
 ## Project Initialization
@@ -214,9 +214,9 @@ vibe-guardrails gate status
 ## Repository Layout
 
 ```text
-plugins/claude/vibe-coding-guardrails/   Claude plugin
-plugins/codex/vibe-coding-guardrails/    Codex plugin
-plugins/cursor/vibe-coding-guardrails/   Cursor Lite rule
+plugins/claude/ai-harness-guardrails/   Claude plugin
+plugins/codex/ai-harness-guardrails/    Codex plugin
+plugins/cursor/ai-harness-guardrails/   Cursor Lite rule
 src/                                      CLI and deterministic checks
 templates/project/                        Git hooks, CI, config, gate schemas
 docs/                                     implementation docs
@@ -235,7 +235,7 @@ npm run check
 Expected result:
 
 ```text
-Validation passed. final Vibe Coding Guardrails layout is valid.
+Validation passed. final AI Harness Guardrails layout is valid.
 Unit tests passed.
 ```
 

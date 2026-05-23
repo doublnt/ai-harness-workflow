@@ -1,6 +1,6 @@
 # Core Rules
 
-These rules are the short behavioral kernel for Vibe Coding Guardrails.
+These rules are the short behavioral kernel for AI Harness Guardrails.
 
 ## 1. Classify Risk First
 

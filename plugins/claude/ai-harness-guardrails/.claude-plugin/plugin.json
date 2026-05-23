@@ -1,12 +1,12 @@
 {
-  "name": "vibe-coding-guardrails",
-  "displayName": "Vibe Coding Guardrails",
+  "name": "ai-harness-guardrails",
+  "displayName": "AI Harness Guardrails",
   "version": "0.3.0",
   "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
   "author": {
-    "name": "Vibe Coding Guardrails Contributors"
+    "name": "AI Harness Guardrails Contributors"
   },
-  "repository": "https://github.com/your-org/vibe-coding-guardrails",
+  "repository": "https://github.com/your-org/ai-harness-guardrails",
   "license": "MIT",
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",

@@ -1,5 +1,5 @@
 {
-  "name": "vibe-coding-guardrails",
+  "name": "ai-harness-guardrails",
   "version": "0.3.0",
   "description": "AI coding guardrails with a simple behavioral surface and a closed-loop governance harness for skills, hooks, Git hooks, CI gates, and deterministic checks.",
   "type": "module",

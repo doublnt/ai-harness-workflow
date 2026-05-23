@@ -1,6 +1,6 @@
 # Safety Model
 
-Vibe Coding Guardrails supports three enforcement modes.
+AI Harness Guardrails supports three enforcement modes.
 
 - `advisory`: warn only except for obvious secrets and dangerous actions. Best first-install mode.
 - `enforcing`: block dangerous commands, Red Zone changes, invalid commits, and missing L2/L3 gates.
@@ -21,10 +21,10 @@ Vibe Coding Guardrails supports three enforcement modes.
 Hooks should be reviewed before being trusted. Marketplace users should inspect:
 
 ```text
-plugins/claude/vibe-coding-guardrails/hooks/hooks.json
-plugins/claude/vibe-coding-guardrails/hooks/scripts/vibe-hook.mjs
-plugins/codex/vibe-coding-guardrails/hooks/hooks.json
-plugins/codex/vibe-coding-guardrails/hooks/scripts/vibe-hook.mjs
+plugins/claude/ai-harness-guardrails/hooks/hooks.json
+plugins/claude/ai-harness-guardrails/hooks/scripts/vibe-hook.mjs
+plugins/codex/ai-harness-guardrails/hooks/hooks.json
+plugins/codex/ai-harness-guardrails/hooks/scripts/vibe-hook.mjs
 ```
 
 No hook should execute network commands or silently mutate project state.

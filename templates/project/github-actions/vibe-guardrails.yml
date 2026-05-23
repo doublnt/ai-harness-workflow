@@ -15,4 +15,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npx vibe-coding-guardrails check --ci
+      - run: npx ai-harness-guardrails check --ci

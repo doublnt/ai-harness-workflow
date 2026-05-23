@@ -1,4 +1,4 @@
-# Vibe Coding Guardrails 插件
+# AI Harness Guardrails 插件
 
 面向 AI coding agent 的工程护栏插件，包含：
 

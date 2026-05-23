@@ -6,7 +6,7 @@ description: Initialize project-local guardrails after read-only scan, user conf
 
 # init-project
 
-You initialize Vibe Coding Guardrails in the current repository.
+You initialize AI Harness Guardrails in the current repository.
 
 Process:
 

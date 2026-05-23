@@ -1,6 +1,6 @@
 # Security Policy
 
-Vibe Coding Guardrails hooks run local commands. Review hook definitions before trusting them in Claude Code or Codex.
+AI Harness Guardrails hooks run local commands. Review hook definitions before trusting them in Claude Code or Codex.
 
 ## Supported Versions
 

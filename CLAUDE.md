@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This repository contains Vibe Coding Guardrails.
+This repository contains AI Harness Guardrails.
 
 Before changing code, Claude Code should read:
 
@@ -10,7 +10,7 @@ Before changing code, Claude Code should read:
 - `docs/architecture.md`
 - `docs/hooks.md`
 - `src/lib/checks.mjs`
-- `plugins/claude/vibe-coding-guardrails/README.md`
+- `plugins/claude/ai-harness-guardrails/README.md`
 
 Rules for this repository:
 

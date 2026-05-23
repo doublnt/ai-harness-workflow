@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This repository builds Vibe Coding Guardrails, an installable AI coding guardrails plugin plus optional closed-loop harness.
+This repository builds AI Harness Guardrails, an installable AI coding guardrails plugin plus optional closed-loop harness.
 
 ## Required context
 
@@ -11,8 +11,8 @@ Before changing this repository, read:
 - `EXAMPLES.md`
 - `docs/architecture.md`
 - `docs/safety-model.md`
-- `plugins/claude/vibe-coding-guardrails/`
-- `plugins/codex/vibe-coding-guardrails/`
+- `plugins/claude/ai-harness-guardrails/`
+- `plugins/codex/ai-harness-guardrails/`
 
 ## Development rules
 

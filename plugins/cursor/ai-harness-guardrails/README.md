@@ -1,4 +1,4 @@
-# Vibe Coding Guardrails for Cursor
+# AI Harness Guardrails for Cursor
 
 This is the Lite adapter for Cursor. Copy `.cursor/rules/vibe-guardrails.mdc` into your repository to get the core behavioral guardrails.
 

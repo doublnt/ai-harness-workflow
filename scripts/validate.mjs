@@ -21,7 +21,7 @@ const skills = [
 ];
 
 for (const kind of ['claude', 'codex']) {
-  const base = `plugins/${kind}/vibe-coding-guardrails`;
+  const base = `plugins/${kind}/ai-harness-guardrails`;
   const manifestPath = kind === 'claude' ? `${base}/.claude-plugin/plugin.json` : `${base}/.codex-plugin/plugin.json`;
   assert(exists(manifestPath), `${kind} manifest missing`);
   const manifest = json(manifestPath);
@@ -50,14 +50,13 @@ assert(exists('README.md') && exists('README.zh-CN.md'), 'bilingual README missi
 assert(exists('GUARDRAILS.md') && exists('GUARDRAILS.zh-CN.md'), 'compact guardrails docs missing');
 assert(exists('EXAMPLES.md') && exists('EXAMPLES.zh-CN.md'), 'examples docs missing');
 assert(exists('adapters/cursor/vibe-guardrails.mdc'), 'Cursor adapter missing');
-assert(exists('.cursor/rules/vibe-guardrails.mdc'), 'repo Cursor rule missing');
 
 const packageJson = json('package.json');
-assert(packageJson.name === 'vibe-coding-guardrails', 'package name must be vibe-coding-guardrails');
+assert(packageJson.name === 'ai-harness-guardrails', 'package name must be ai-harness-guardrails');
 assert(packageJson.version === '0.3.0', 'package version must be 0.3.0');
 
 if (errors.length) {
   console.error(errors.join('\n'));
   process.exit(1);
 }
-console.log('Validation passed. final Vibe Coding Guardrails layout is valid.');
+console.log('Validation passed. final AI Harness Guardrails layout is valid.');

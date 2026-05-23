@@ -1,4 +1,4 @@
-# Vibe Coding Guardrails
+# AI Harness Guardrails
 
 一套面向 AI 编程的工程护栏：让改动更小、更可审查、必须给证据，并且在高风险操作时可以阻断。
 
@@ -48,23 +48,23 @@ AI coding agent 经常会：
 添加本地 marketplace：
 
 ```text
-/plugin marketplace add ./path/to/vibe-coding-guardrails-final
-/plugin install vibe-coding-guardrails@vibe-guardrails
+/plugin marketplace add ./path/to/ai-harness-guardrails-final
+/plugin install ai-harness-guardrails@vibe-guardrails
 ```
 
 然后使用：
 
 ```text
-/vibe-coding-guardrails:guardrails-core
-/vibe-coding-guardrails:init-project
-/vibe-coding-guardrails:risk-classify
-/vibe-coding-guardrails:new-feature
-/vibe-coding-guardrails:design-review
-/vibe-coding-guardrails:implementation-plan
-/vibe-coding-guardrails:code-review
-/vibe-coding-guardrails:test-plan
-/vibe-coding-guardrails:security-review
-/vibe-coding-guardrails:release-check
+/ai-harness-guardrails:guardrails-core
+/ai-harness-guardrails:init-project
+/ai-harness-guardrails:risk-classify
+/ai-harness-guardrails:new-feature
+/ai-harness-guardrails:design-review
+/ai-harness-guardrails:implementation-plan
+/ai-harness-guardrails:code-review
+/ai-harness-guardrails:test-plan
+/ai-harness-guardrails:security-review
+/ai-harness-guardrails:release-check
 ```
 
 ## Codex 安装
@@ -72,15 +72,15 @@ AI coding agent 经常会：
 添加本地 marketplace：
 
 ```text
-codex plugin marketplace add ./path/to/vibe-coding-guardrails-final
+codex plugin marketplace add ./path/to/ai-harness-guardrails-final
 ```
 
-安装 `vibe-coding-guardrails` 后，可以自然语言调用：
+安装 `ai-harness-guardrails` 后，可以自然语言调用：
 
 ```text
-Use Vibe Coding Guardrails Core for this coding task.
-Use Vibe Coding Guardrails to initialize this repository.
-Use Vibe Coding Guardrails to review this diff before commit.
+Use AI Harness Guardrails Core for this coding task.
+Use AI Harness Guardrails to initialize this repository.
+Use AI Harness Guardrails to review this diff before commit.
 ```
 
 ## Cursor 使用
@@ -89,7 +89,7 @@ Use Vibe Coding Guardrails to review this diff before commit.
 
 ```bash
 mkdir -p .cursor/rules
-cp plugins/cursor/vibe-coding-guardrails/.cursor/rules/vibe-guardrails.mdc .cursor/rules/vibe-guardrails.mdc
+cp plugins/cursor/ai-harness-guardrails/.cursor/rules/vibe-guardrails.mdc .cursor/rules/vibe-guardrails.mdc
 ```
 
 或者通过 CLI 打印：
@@ -111,8 +111,8 @@ node bin/vibe-guardrails.mjs check --staged
 发布为 npm 包后：
 
 ```bash
-npx vibe-coding-guardrails init --profile harness --target detect --install-hooks
-npx vibe-coding-guardrails check --ci
+npx ai-harness-guardrails init --profile harness --target detect --install-hooks
+npx ai-harness-guardrails check --ci
 ```
 
 ## 项目初始化
@@ -214,9 +214,9 @@ vibe-guardrails gate status
 ## 仓库结构
 
 ```text
-plugins/claude/vibe-coding-guardrails/   Claude plugin
-plugins/codex/vibe-coding-guardrails/    Codex plugin
-plugins/cursor/vibe-coding-guardrails/   Cursor Lite 规则
+plugins/claude/ai-harness-guardrails/   Claude plugin
+plugins/codex/ai-harness-guardrails/    Codex plugin
+plugins/cursor/ai-harness-guardrails/   Cursor Lite 规则
 src/                                      CLI 和确定性检查
 templates/project/                        Git hooks、CI、config、gate schema
 docs/                                     实现文档
@@ -235,7 +235,7 @@ npm run check
 预期结果：
 
 ```text
-Validation passed. final Vibe Coding Guardrails layout is valid.
+Validation passed. final AI Harness Guardrails layout is valid.
 Unit tests passed.
 ```
 

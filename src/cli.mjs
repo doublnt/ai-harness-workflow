@@ -120,11 +120,11 @@ function guardrailsCore() {
 }
 
 function agentsInstructions() {
-  return `# AGENTS.md\n\nThis project uses Vibe Coding Guardrails.\n\nBefore implementation:\n\n1. Read GUARDRAILS.md.\n2. Classify task risk: L0, L1, L2, L3.\n3. Keep changes surgical.\n4. Do not modify Red Zone files without human approval.\n5. Do not claim tests passed unless they were actually run.\n6. For L2/L3 work, create gate artifacts under .guardrails/gates and record approval when required.\n\nUse Vibe Coding Guardrails skills for planning, review, testing, security review, and release checks.\n`;
+  return `# AGENTS.md\n\nThis project uses AI Harness Guardrails.\n\nBefore implementation:\n\n1. Read GUARDRAILS.md.\n2. Classify task risk: L0, L1, L2, L3.\n3. Keep changes surgical.\n4. Do not modify Red Zone files without human approval.\n5. Do not claim tests passed unless they were actually run.\n6. For L2/L3 work, create gate artifacts under .guardrails/gates and record approval when required.\n\nUse AI Harness Guardrails skills for planning, review, testing, security review, and release checks.\n`;
 }
 
 function claudeInstructions() {
-  return `# CLAUDE.md\n\nThis project uses Vibe Coding Guardrails.\n\nRequired reading before changes:\n\n- GUARDRAILS.md\n- .guardrails/config.json, if present\n\nUse the Vibe Coding Guardrails plugin skills:\n\n- /vibe-coding-guardrails:guardrails-core\n- /vibe-coding-guardrails:risk-classify\n- /vibe-coding-guardrails:new-feature\n- /vibe-coding-guardrails:code-review\n- /vibe-coding-guardrails:test-plan\n- /vibe-coding-guardrails:security-review\n- /vibe-coding-guardrails:release-check\n\nDo not modify Red Zone files without explicit approval and required gates.\n`;
+  return `# CLAUDE.md\n\nThis project uses AI Harness Guardrails.\n\nRequired reading before changes:\n\n- GUARDRAILS.md\n- .guardrails/config.json, if present\n\nUse the AI Harness Guardrails plugin skills:\n\n- /ai-harness-guardrails:guardrails-core\n- /ai-harness-guardrails:risk-classify\n- /ai-harness-guardrails:new-feature\n- /ai-harness-guardrails:code-review\n- /ai-harness-guardrails:test-plan\n- /ai-harness-guardrails:security-review\n- /ai-harness-guardrails:release-check\n\nDo not modify Red Zone files without explicit approval and required gates.\n`;
 }
 
 function cmdCheck(args) {
@@ -233,5 +233,5 @@ async function cmdHook(args) {
 }
 
 function help() {
-  console.log(`Vibe Coding Guardrails ${VERSION}\n\nModes:\n  Lite     Plugin skill only, no repo enforcement\n  Project  Project-local GUARDRAILS.md + agent instructions\n  Harness  Project-local rules + hooks + CI gate\n\nCommands:\n  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]\n  scan [--json]\n  check [--staged|--ci|--push] [--json]\n  commit-msg <file>\n  install-hooks\n  uninstall-hooks\n  ci-template [--write]\n  cursor-template [--write]\n  gate create --task <text> --risk L2 --gates design,security,test\n  gate approve <gate-id>\n  gate status\n  doctor\n  hook <event>\n`);
+  console.log(`AI Harness Guardrails ${VERSION}\n\nModes:\n  Lite     Plugin skill only, no repo enforcement\n  Project  Project-local GUARDRAILS.md + agent instructions\n  Harness  Project-local rules + hooks + CI gate\n\nCommands:\n  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]\n  scan [--json]\n  check [--staged|--ci|--push] [--json]\n  commit-msg <file>\n  install-hooks\n  uninstall-hooks\n  ci-template [--write]\n  cursor-template [--write]\n  gate create --task <text> --risk L2 --gates design,security,test\n  gate approve <gate-id>\n  gate status\n  doctor\n  hook <event>\n`);
 }
