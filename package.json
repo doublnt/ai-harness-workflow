@@ -1,40 +1,55 @@
 {
   "name": "vibe-coding-guardrails",
-  "version": "0.2.0",
-  "description": "Closed-loop governance guardrails for AI-assisted coding: skills, lifecycle hooks, Git hooks, CI gates, and deterministic checks.",
+  "version": "0.3.0",
+  "description": "AI coding guardrails with a simple behavioral surface and a closed-loop governance harness for skills, hooks, Git hooks, CI gates, and deterministic checks.",
   "type": "module",
   "bin": {
-    "vibe-guardrails": "./bin/vibe-guardrails.js"
+    "vibe-guardrails": "./bin/vibe-guardrails.mjs"
   },
   "scripts": {
-    "test": "node --test",
-    "validate": "node ./scripts/validate.mjs",
+    "validate": "node scripts/validate.mjs",
+    "test": "node scripts/validate.mjs && node test/run.mjs",
     "check": "npm run validate && npm test",
-    "lint": "node ./scripts/validate.mjs"
+    "demo:doctor": "node bin/vibe-guardrails.mjs doctor",
+    "demo:scan": "node bin/vibe-guardrails.mjs scan --json"
   },
   "keywords": [
+    "agent",
     "ai",
-    "coding-agent",
+    "ci",
     "claude-code",
+    "code-review",
     "codex",
-    "hooks",
-    "skills",
+    "cursor",
+    "docs-drift",
+    "git-hooks",
     "governance",
     "guardrails",
-    "code-review",
+    "hooks",
+    "red-zone",
+    "security",
+    "skills",
     "testing"
   ],
   "license": "MIT",
   "engines": {
-    "node": ">=18.18"
+    "node": ">=18"
   },
   "files": [
-    "bin/",
-    "src/",
-    "plugins/",
-    "templates/",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "EXAMPLES.md",
+    "EXAMPLES.zh-CN.md",
+    "GUARDRAILS.md",
+    "GUARDRAILS.zh-CN.md",
+    "LICENSE",
     "README.md",
     "README.zh-CN.md",
-    "LICENSE"
+    "adapters",
+    "bin",
+    "docs",
+    "plugins",
+    "src",
+    "templates"
   ]
 }

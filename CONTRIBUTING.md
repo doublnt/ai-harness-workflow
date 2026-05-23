@@ -1,15 +1,21 @@
 # Contributing
 
-Run before submitting changes:
+Run:
 
 ```bash
-npm run check
+npm test
+node bin/vibe-guardrails.mjs doctor
 ```
 
-Commit messages must include a risk tag, for example:
+For hook changes, update:
+
+- `docs/hooks.md`
+- `docs/safety-model.md`
+- plugin README files
+- validation tests
+
+Use Conventional Commits with a risk tag:
 
 ```text
-feat(hooks): add docs drift checker [risk:L1]
+feat(cli): add docs drift gate [risk:L1]
 ```
-
-Changes to hook behavior, Red Zone rules, plugin manifests, or release gates are at least L2.

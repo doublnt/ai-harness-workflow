@@ -1,0 +1,51 @@
+---
+description: Lightweight Vibe Coding Guardrails for Cursor. Use for all code writing, refactoring, review, testing, and release-related tasks.
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Vibe Coding Guardrails for Cursor
+
+Apply these rules to every coding task.
+
+## Four rules
+
+1. Classify risk before coding: L0, L1, L2, or L3.
+2. Keep changes surgical: every changed line must trace to the user request.
+3. Require evidence: do not claim tests passed unless tests were actually run.
+4. Block unsafe work: do not touch secrets, migrations, auth, payments, CI/CD, deployment, public API contracts, or AI workflow files without explicit approval and required gates.
+
+## Required output for non-trivial changes
+
+```text
+Risk Level:
+Assumptions:
+Unknowns:
+Plan:
+Files To Change:
+Files Not To Touch:
+Tests / Evidence:
+Human Approval Required:
+```
+
+## L2/L3 additions
+
+```text
+Required Gates:
+Security Considerations:
+Rollback Plan:
+Gate Artifact:
+```
+
+## Red Zone
+
+Treat these as Red Zone by default:
+
+- `.env`, `.env.*`, secrets, credentials
+- migrations, database schema
+- auth, authorization, security, payment
+- production data
+- CI/CD and deployment configs
+- `CLAUDE.md`, `AGENTS.md`, `.claude/`, `.codex/`, `.agents/`
+- destructive commands and dependency installation

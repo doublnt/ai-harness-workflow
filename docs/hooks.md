@@ -1,14 +1,34 @@
 # Hooks
 
-V2 ships plugin-bundled lifecycle hooks for Claude Code and Codex.
+The final harness includes Claude and Codex lifecycle hooks.
 
-The hooks intentionally block only high-confidence dangerous actions:
+## Events
 
-- destructive `rm -rf`
-- `git push`
-- direct `git commit` by an agent
-- dependency installation without review
-- reading real `.env` files
-- operations touching Red Zone files
+- `UserPromptSubmit`: adds guardrail context for high-risk prompts.
+- `PreToolUse`: blocks or asks before dangerous commands and Red Zone file changes.
+- `PermissionRequest`: repeats the same guard at permission time when supported.
+- `Stop`: blocks final responses in enforcing/strict mode if they lack required gate summary sections.
 
-For day-to-day policy checks, use Git hooks and CI.
+## What hooks block
+
+Examples:
+
+```text
+rm -rf
+git push
+installing dependencies
+reading real .env files
+editing migrations without approval
+editing auth/security/payment files without gates
+editing CLAUDE.md / AGENTS.md / agent config files without approval
+```
+
+## Safety
+
+Hooks do not access the network. They read hook JSON from stdin and project-local `.guardrails/config.json` only.
+
+## Modes
+
+- `advisory`: warn.
+- `enforcing`: block Red Zone and dangerous operations.
+- `strict`: block missing summaries and unresolved gate state more aggressively.

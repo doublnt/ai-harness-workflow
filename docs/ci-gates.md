@@ -1,15 +1,11 @@
 # CI Gates
 
-Generate a GitHub Actions workflow:
+Use `templates/project/github-actions/vibe-guardrails.yml` as a starting point.
 
-```bash
-vibe-guardrails ci-template --write
-```
-
-The CI gate runs:
+CI should run:
 
 ```bash
 npx vibe-coding-guardrails check --ci
 ```
 
-Use it on pull requests to catch bypassed local hooks.
+CI checks red zone changes, docs drift, secret patterns, gate artifacts, approvals, and release readiness.

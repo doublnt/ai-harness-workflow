@@ -1,17 +1,9 @@
-# Vibe Coding Guardrails for Claude Code
+# Vibe Coding Guardrails 插件
 
-这个插件提供 v2 闭环治理能力：
+面向 AI coding agent 的工程护栏插件，包含：
 
-- init、风险分类、功能规划、设计评审、代码评审、测试计划、安全评审、发布检查等 skills
-- lifecycle hooks，用于阻断危险命令和 Red Zone 文件操作
-- risk levels、gates、file-change policy、project output templates 等资源文件
+- `guardrails-core`：简洁行为规则。
+- 工作流 skills：初始化、风险分类、功能规划、设计评审、实现计划、代码评审、测试计划、安全评审、发布检查。
+- lifecycle hooks：可选执行层，用于阻断危险工具调用和不完整总结。
 
-建议流程：
-
-1. 安装插件。
-2. 运行 init-project skill。
-3. 审查生成的 `.guardrails/config.json` 和 gate 模板。
-4. 安装 Git hooks。
-5. 在 CI 中加入 `vibe-guardrails check --ci`。
-
-v2 不包含 MCP server，也不默认连接外部服务。
+Lite 模式先用 `guardrails-core`。需要项目级规范或闭环门禁时运行 `init-project`。

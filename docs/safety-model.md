@@ -1,34 +1,30 @@
 # Safety Model
 
-## v1 constraints
+Vibe Coding Guardrails supports three enforcement modes.
 
-- Skills only.
-- No hooks.
-- No MCP servers.
-- No app connectors.
-- No runtime scripts inside plugin roots.
-- No default command allowlists.
+- `advisory`: warn only except for obvious secrets and dangerous actions. Best first-install mode.
+- `enforcing`: block dangerous commands, Red Zone changes, invalid commits, and missing L2/L3 gates.
+- `strict`: also block docs drift, missing approvals, and incomplete gate summaries.
 
-## Runtime flow
+## Safety rules
 
-1. User installs plugin.
-2. Nothing in the target repository changes.
-3. User invokes `init-project`.
-4. Skill performs read-only analysis through the host AI client.
-5. Skill outputs a scan report and confirmation questions.
-6. Only after confirmation may the host AI client create or update project-local files.
+- Plugin installation does not modify the repository.
+- `init-project` scans first, reports, asks for confirmation, then writes files.
+- Existing files are not overwritten; conflicts are written as drafts.
+- Hooks are deterministic and local.
+- Hooks do not contact the network.
+- Real `.env` files are not read.
+- Local Git hooks can be bypassed; CI gates are the enforcement backstop.
 
-## High-risk operations
+## Trust model
 
-The skills must block or require explicit human approval for:
+Hooks should be reviewed before being trusted. Marketplace users should inspect:
 
-- database migrations
-- authentication and authorization
-- payments
-- production data
-- CI/CD behavior
-- secrets and credentials
-- deployment config
-- public API breaking changes
-- large refactors
-- destructive file operations
+```text
+plugins/claude/vibe-coding-guardrails/hooks/hooks.json
+plugins/claude/vibe-coding-guardrails/hooks/scripts/vibe-hook.mjs
+plugins/codex/vibe-coding-guardrails/hooks/hooks.json
+plugins/codex/vibe-coding-guardrails/hooks/scripts/vibe-hook.mjs
+```
+
+No hook should execute network commands or silently mutate project state.

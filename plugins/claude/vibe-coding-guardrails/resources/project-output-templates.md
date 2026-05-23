@@ -1,45 +1,19 @@
-# Project-local Output Templates
+# Project Output Templates
 
-The plugin itself is portable. The `init-project` skill creates project-local files only after user confirmation.
+## `.guardrails/config.json`
+Machine-readable enforcement configuration.
 
-## Claude target
+## `.guardrails/gates/<id>.json`
+Machine-readable gate artifact.
 
-```text
-CLAUDE.md                         # create only if missing; otherwise draft append
-.claude/rules/engineering-constitution.md
-.claude/rules/risk-levels.md
-.claude/rules/file-change-policy.md
-.claude/skills/ai-development-governance/SKILL.md
-.claude/skills/ai-development-governance/references/project-context.md
-.claude/_drafts/CONTRIBUTING.draft.md
-.claude/_drafts/PULL_REQUEST_TEMPLATE.draft.md
-```
+## `.guardrails/approvals/<id>.approval.json`
+Human approval ledger.
 
-## Codex target
+## `docs/gates/<id>.md`
+Human-readable gate summary.
 
-```text
-AGENTS.md                         # create only if missing; otherwise draft append
-.agents/skills/ai-development-governance/SKILL.md
-.agents/skills/ai-development-governance/references/project-context.md
-.codex/rules/governance.rules
-.agents/_drafts/CONTRIBUTING.draft.md
-.agents/_drafts/PULL_REQUEST_TEMPLATE.draft.md
-```
+## `.githooks/*`
+Local Git hooks.
 
-## Both target
-
-Use `AGENTS.md` as shared source and `CLAUDE.md` as Claude adapter.
-
-## Spec Kit compatible target
-
-```text
-.specify/governance/guardrails.md
-.specify/governance/project-context.md
-.specify/governance/risk-levels.md
-.specify/governance/file-change-policy.md
-.specify/commands/governance-check.md
-```
-
-## Conflict rule
-
-Never overwrite existing project files. If a file exists, generate a draft patch or append draft in a `_drafts/` folder.
+## `.github/workflows/vibe-guardrails.yml`
+CI gate draft.

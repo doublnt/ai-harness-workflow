@@ -1,8 +1,12 @@
 # Docs Drift Gate
 
-The docs drift gate checks whether API, database, security, configuration, or AI workflow changes need documentation updates.
+Docs drift detects code changes that usually require documentation updates.
 
-A change passes if:
+Examples:
 
-- related docs changed, or
-- a gate artifact contains `docsImpact.status = "none"` with a justification.
+- API route changes -> API docs or gate artifact
+- database migration -> database/migration docs or gate artifact
+- env/config changes -> deployment docs
+- AI governance changes -> governance docs
+
+A gate artifact with a justified `Docs impact: none` can satisfy the requirement.

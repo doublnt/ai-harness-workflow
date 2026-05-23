@@ -1,9 +1,9 @@
-# Vibe Coding Guardrails for Codex
+# Vibe Coding Guardrails Plugin
 
-This plugin provides v2 closed-loop governance:
+A plugin for AI coding agents that provides:
 
-- skills for init, risk classification, feature planning, design review, code review, test planning, security review, and release check
-- lifecycle hooks for dangerous command and Red Zone protection
-- resources explaining risk levels, gates, file-change policy, and project output templates
+- `guardrails-core`: concise behavior rules.
+- workflow skills: init, risk classification, feature planning, design review, implementation planning, code review, test planning, security review, release checks.
+- lifecycle hooks: optional enforcement for dangerous tools and incomplete summaries.
 
-Install from the marketplace in this repository and run the init-project skill before enabling strict enforcement.
+Start with `guardrails-core` for Lite mode. Run `init-project` to install project-local rules and choose Project or Harness mode.

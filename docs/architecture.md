@@ -1,25 +1,64 @@
 # Architecture
 
-## Product shape
-
-Vibe Coding Guardrails v1 is a pure skills distribution:
+Vibe Coding Guardrails has a simple surface and a closed-loop enforcement core.
 
 ```text
-Marketplace catalog -> installable plugin -> skills -> references
+Lite skill          -> improve AI behavior without repo changes
+Project rules       -> generate CLAUDE.md / AGENTS.md / GUARDRAILS.md
+Agent hooks         -> interrupt risky tool use and incomplete turns
+Git hooks           -> block bad commits locally
+CLI checker         -> deterministic policy engine
+Gate artifacts      -> machine-readable governance state
+CI gates            -> PR / merge enforcement backstop
 ```
 
-The plugin contributes workflows. It does not contribute runtime automation.
+The design separates model reasoning from deterministic enforcement.
 
-## Responsibilities
+- Skills help the agent think, plan, review, test, and explain.
+- Hooks interrupt unsafe agent actions while work is happening.
+- Git hooks catch issues before local commit or push.
+- CI gates catch issues even if local hooks are bypassed.
+- Gate artifacts and approval records make L2/L3 decisions auditable.
 
-| Layer | Responsibility |
-|---|---|
-| Marketplace | Discovery and installation metadata |
-| Plugin manifest | Namespacing and component paths |
-| Skill | Reusable workflow instructions |
-| Resources | Governance rules, gates, templates, and checklists |
-| Validation script | Repository quality checks only |
+## Layers
 
-## Safety model
+### Layer 1 — Lite
 
-The safest boundary is to make installation side-effect free. Installation only exposes skills. A skill can ask the AI client to inspect or edit a repository, but the skill instructions require read-only scanning first and explicit user confirmation before writes.
+A compact `guardrails-core` skill and `GUARDRAILS.md` file.
+
+Use this when you only need behavioral guidance:
+
+```text
+Classify Risk First
+Keep Changes Surgical
+Require Evidence
+Block Unsafe Work
+```
+
+### Layer 2 — Project
+
+Project-local AI instructions:
+
+```text
+CLAUDE.md
+AGENTS.md
+GUARDRAILS.md
+.guardrails/config.json
+```
+
+Use this when a repository needs stable rules across coding agents.
+
+### Layer 3 — Harness
+
+Closed-loop enforcement:
+
+```text
+Agent lifecycle hooks
+Git hooks
+CI gate
+Gate artifacts
+Approval ledger
+Docs drift checker
+```
+
+Use this for teams, production systems, and sensitive code.

@@ -1,7 +1,23 @@
 # Security Policy
 
-Report security issues privately by opening a security advisory or contacting the maintainers.
+Vibe Coding Guardrails hooks run local commands. Review hook definitions before trusting them in Claude Code or Codex.
 
-Do not include real secrets in issues, examples, tests, or fixtures.
+## Supported Versions
 
-Vibe Guardrails hooks intentionally block high-confidence dangerous actions, but they are not a sandbox. Use repository permissions, CI protections, and human review for high-risk changes.
+| Version | Supported |
+|---|---|
+| 0.3.x | yes |
+| 0.2.x | security fixes only |
+| 0.1.x | unsupported |
+
+## Reporting Vulnerabilities
+
+Open a private advisory or email the maintainers. Do not include secrets in reports.
+
+## Security Principles
+
+- Hooks must not exfiltrate data.
+- Hooks must not contact external networks.
+- Hooks must not read real `.env` files.
+- Hooks must fail closed only for clearly documented gates.
+- Enforcement can be configured as `advisory`, `enforcing`, or `strict`.

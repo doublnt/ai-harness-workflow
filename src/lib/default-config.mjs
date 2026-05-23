@@ -1,0 +1,89 @@
+export const DEFAULT_CONFIG = {
+  version: 2,
+  mode: 'advisory',
+  riskTagRequired: true,
+  requireGateArtifactsFor: ['L2', 'L3'],
+  requireApprovalFor: ['L2', 'L3'],
+  redZone: [
+    'migrations/**',
+    'prisma/schema.prisma',
+    'supabase/migrations/**',
+    'db/migrations/**',
+    'src/auth/**',
+    'src/security/**',
+    'src/payments/**',
+    'app/api/auth/**',
+    'server/auth/**',
+    '.github/workflows/**',
+    'Dockerfile',
+    'docker-compose.yml',
+    'compose.yml',
+    'deploy/**',
+    'infra/**',
+    '.env',
+    '.env.*',
+    'CLAUDE.md',
+    'AGENTS.md',
+    '.claude/settings.json',
+    '.codex/config.toml'
+  ],
+  yellowZone: [
+    'package.json',
+    'package-lock.json',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+    'bun.lockb',
+    'Cargo.toml',
+    'Cargo.lock',
+    'go.mod',
+    'go.sum',
+    'pyproject.toml',
+    'requirements.txt',
+    'tsconfig.json',
+    'vite.config.*',
+    'next.config.*'
+  ],
+  docsDrift: [
+    {
+      name: 'API routes changed',
+      changed: ['app/api/**', 'src/routes/**', 'server/routes/**', 'openapi.*', '**/*.graphql', '**/*.proto'],
+      docs: ['docs/api/**', 'README.md', 'CHANGELOG.md']
+    },
+    {
+      name: 'Database schema changed',
+      changed: ['prisma/schema.prisma', 'migrations/**', 'db/migrations/**', 'supabase/migrations/**'],
+      docs: ['docs/database/**', 'docs/migrations/**', 'docs/gates/**']
+    },
+    {
+      name: 'Environment/config changed',
+      changed: ['.env.example', 'config/**', 'Dockerfile', 'docker-compose.yml', 'compose.yml'],
+      docs: ['docs/deployment/**', 'README.md']
+    },
+    {
+      name: 'AI governance changed',
+      changed: ['CLAUDE.md', 'AGENTS.md', '.claude/**', '.codex/**', '.agents/**'],
+      docs: ['docs/ai/**', 'docs/governance/**', 'CHANGELOG.md']
+    }
+  ],
+  dangerousCommands: [
+    '^rm\\s+-rf\\s+/',
+    '^sudo\\b',
+    '\\bgit\\s+push\\b',
+    '\\bgit\\s+reset\\s+--hard\\b',
+    '\\bgit\\s+clean\\s+-fd',
+    '\\bnpm\\s+install\\b',
+    '\\bpnpm\\s+add\\b',
+    '\\byarn\\s+add\\b',
+    '\\bcargo\\s+add\\b',
+    '\\bdocker\\s+compose\\s+up\\b.*--detach',
+    '\\bterraform\\s+apply\\b',
+    '\\bkubectl\\s+(apply|delete)\\b'
+  ],
+  secretPatterns: [
+    'AKIA[0-9A-Z]{16}',
+    'sk-[A-Za-z0-9_-]{20,}',
+    'ghp_[A-Za-z0-9]{20,}',
+    'xox[baprs]-[A-Za-z0-9-]{10,}',
+    '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
+  ]
+};

@@ -1,37 +1,39 @@
 {
   "name": "vibe-coding-guardrails",
-  "version": "0.2.0",
-  "description": "Closed-loop AI development governance for Codex: skills, lifecycle hooks, risk gates, Git hooks, CI gates, docs drift, and release checks.",
+  "version": "0.3.0",
+  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
   "author": {
-    "name": "Vibe Guardrails Contributors",
-    "url": "https://github.com/your-org"
+    "name": "Vibe Coding Guardrails Contributors"
   },
   "homepage": "https://github.com/your-org/vibe-coding-guardrails",
   "repository": "https://github.com/your-org/vibe-coding-guardrails",
   "license": "MIT",
   "keywords": [
-    "governance",
-    "hooks",
+    "ai-coding",
+    "guardrails",
     "skills",
+    "hooks",
     "code-review",
     "testing",
-    "security"
+    "security",
+    "ci"
   ],
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "Vibe Coding Guardrails",
-    "shortDescription": "Closed-loop governance gates for AI-assisted coding.",
-    "longDescription": "Initialize repository-specific AI development guardrails, classify task risk, run design/code/test/security/release gates, and enforce deterministic checks with hooks and CI.",
-    "developerName": "Vibe Guardrails Contributors",
+    "shortDescription": "AI coding guardrails for safe, evidence-backed changes.",
+    "longDescription": "Use lightweight skills for everyday coding behavior or initialize a closed-loop harness with hooks, Git hooks, CI gates, gate artifacts, approvals, and docs drift checks.",
+    "developerName": "Vibe Coding Guardrails Contributors",
     "category": "Developer Tools",
     "capabilities": [
       "Read",
       "Write"
     ],
     "defaultPrompt": [
+      "Use Vibe Coding Guardrails core rules for this change.",
       "Use Vibe Coding Guardrails to initialize this repository.",
-      "Use Vibe Coding Guardrails to review this diff before merge."
+      "Use Vibe Coding Guardrails to review this diff before commit."
     ]
   }
 }

@@ -1,21 +1,16 @@
 # Git Hooks
 
-Install local Git hooks:
+Install local hooks:
 
 ```bash
+vibe-guardrails init --mode enforcing
 vibe-guardrails install-hooks
 ```
 
-This writes:
+Hooks:
 
-- `.githooks/pre-commit`
-- `.githooks/commit-msg`
-- `.githooks/pre-push`
+- `pre-commit`: runs `vibe-guardrails check --staged`
+- `commit-msg`: enforces risk tags and L2/L3 trailers
+- `pre-push`: runs stronger checks before push
 
-and configures:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-Client-side Git hooks can be bypassed. Use CI for enforcement.
+Local Git hooks can be bypassed with `--no-verify`; CI gates are the final enforcement layer.

@@ -1,13 +1,22 @@
 {
   "name": "vibe-coding-guardrails",
   "displayName": "Vibe Coding Guardrails",
-  "version": "0.2.0",
-  "description": "Closed-loop AI development governance for Claude Code: skills, lifecycle hooks, risk gates, Git hooks, CI gates, docs drift, and release checks.",
+  "version": "0.3.0",
+  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
   "author": {
-    "name": "Vibe Guardrails Contributors"
+    "name": "Vibe Coding Guardrails Contributors"
   },
   "repository": "https://github.com/your-org/vibe-coding-guardrails",
   "license": "MIT",
   "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "hooks": "./hooks/hooks.json",
+  "keywords": [
+    "ai-coding",
+    "guardrails",
+    "skills",
+    "hooks",
+    "code-review",
+    "testing",
+    "security"
+  ]
 }
