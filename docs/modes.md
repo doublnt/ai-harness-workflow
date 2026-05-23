@@ -1,10 +1,10 @@
 # Modes
 
-AI Harness Guardrails has three adoption modes.
+AnyHarness has three adoption modes.
 
 ## Lite
 
-Lite mode is one behavioral layer: `guardrails-core` plus optional Cursor rule. It does not install hooks and does not modify the repository during plugin install.
+Lite mode is one behavioral layer: `harness-core` plus optional Cursor rule. It does not install hooks and does not modify the repository during plugin install.
 
 Use Lite when:
 

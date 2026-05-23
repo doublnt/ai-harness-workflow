@@ -1,11 +1,11 @@
 # Final Architecture
 
-AI Harness Guardrails uses a simple surface and a closed-loop core.
+AnyHarness uses a simple surface and a closed-loop core.
 
 ## Surface
 
-- `GUARDRAILS.md`
-- `guardrails-core` skill
+- `ANYHARNESS.md`
+- `harness-core` skill
 - `EXAMPLES.md`
 - Lite adapters for Claude, Codex, and Cursor
 

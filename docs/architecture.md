@@ -1,10 +1,10 @@
 # Architecture
 
-AI Harness Guardrails has a simple surface and a closed-loop enforcement core.
+AnyHarness has a simple surface and a closed-loop enforcement core.
 
 ```text
 Lite skill          -> improve AI behavior without repo changes
-Project rules       -> generate CLAUDE.md / AGENTS.md / GUARDRAILS.md
+Project rules       -> generate CLAUDE.md / AGENTS.md / ANYHARNESS.md
 Agent hooks         -> interrupt risky tool use and incomplete turns
 Git hooks           -> block bad commits locally
 CLI checker         -> deterministic policy engine
@@ -24,7 +24,7 @@ The design separates model reasoning from deterministic enforcement.
 
 ### Layer 1 — Lite
 
-A compact `guardrails-core` skill and `GUARDRAILS.md` file.
+A compact `harness-core` skill and `ANYHARNESS.md` file.
 
 Use this when you only need behavioral guidance:
 
@@ -42,8 +42,8 @@ Project-local AI instructions:
 ```text
 CLAUDE.md
 AGENTS.md
-GUARDRAILS.md
-.guardrails/config.json
+ANYHARNESS.md
+.anyharness/config.json
 ```
 
 Use this when a repository needs stable rules across coding agents.

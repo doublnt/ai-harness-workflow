@@ -1,16 +1,16 @@
 # CLAUDE.md
 
-This repository contains AI Harness Guardrails.
+This repository contains AnyHarness.
 
 Before changing code, Claude Code should read:
 
 - `README.md`
-- `GUARDRAILS.md`
+- `ANYHARNESS.md`
 - `EXAMPLES.md`
 - `docs/architecture.md`
 - `docs/hooks.md`
 - `src/lib/checks.mjs`
-- `plugins/claude/ai-harness-guardrails/README.md`
+- `plugins/claude/anyharness/README.md`
 
 Rules for this repository:
 
@@ -20,5 +20,5 @@ Rules for this repository:
 4. Do not add network calls to hooks or checks.
 5. Do not read real `.env` files in tests or scanners.
 6. Preserve Claude and Codex plugin structures.
-7. Keep `guardrails-core` short and behavior-focused.
+7. Keep `harness-core` short and behavior-focused.
 8. Run `npm run check` before claiming validation passed.

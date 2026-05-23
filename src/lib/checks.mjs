@@ -66,7 +66,7 @@ export function runChecks({ staged = false, ci = false, push = false, files = nu
 
 export function formatCheckResult(result) {
   const lines = [];
-  lines.push(`Vibe Guardrails check: ${result.ok ? 'PASS' : 'BLOCKED'}`);
+  lines.push(`AnyHarness check: ${result.ok ? 'PASS' : 'BLOCKED'}`);
   lines.push(`Mode: ${result.mode}`);
   lines.push(`Risk: ${result.risk}`);
   if (result.changedFiles.length) lines.push(`Changed files: ${result.changedFiles.join(', ')}`);

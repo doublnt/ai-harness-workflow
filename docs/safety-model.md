@@ -1,6 +1,6 @@
 # Safety Model
 
-AI Harness Guardrails supports three enforcement modes.
+AnyHarness supports three enforcement modes.
 
 - `advisory`: warn only except for obvious secrets and dangerous actions. Best first-install mode.
 - `enforcing`: block dangerous commands, Red Zone changes, invalid commits, and missing L2/L3 gates.
@@ -21,10 +21,10 @@ AI Harness Guardrails supports three enforcement modes.
 Hooks should be reviewed before being trusted. Marketplace users should inspect:
 
 ```text
-plugins/claude/ai-harness-guardrails/hooks/hooks.json
-plugins/claude/ai-harness-guardrails/hooks/scripts/vibe-hook.mjs
-plugins/codex/ai-harness-guardrails/hooks/hooks.json
-plugins/codex/ai-harness-guardrails/hooks/scripts/vibe-hook.mjs
+plugins/claude/anyharness/hooks/hooks.json
+plugins/claude/anyharness/hooks/scripts/anyharness-hook.mjs
+plugins/codex/anyharness/hooks/hooks.json
+plugins/codex/anyharness/hooks/scripts/anyharness-hook.mjs
 ```
 
 No hook should execute network commands or silently mutate project state.

@@ -8,7 +8,7 @@ export async function runAgentHook(kind, stdin = '', env = process.env) {
   if (event === 'PreToolUse' || event === 'pre-tool-use' || event === 'PermissionRequest' || event === 'permission-request') {
     const result = evaluateToolUse(input, projectDir);
     if (!result.ok) return blockPreTool(result.findings.join('\n'));
-    return allowContext('Vibe Guardrails checked tool use.');
+    return allowContext('AnyHarness checked tool use.');
   }
   if (event === 'Stop' || event === 'SubagentStop' || event === 'stop' || event === 'subagent-stop') {
     const result = evaluateStop(input);
@@ -18,7 +18,7 @@ export async function runAgentHook(kind, stdin = '', env = process.env) {
   if (event === 'UserPromptSubmit' || event === 'user-prompt-submit') {
     const prompt = input.prompt || input.user_prompt || '';
     if (/\b(production|payment|auth|authorization|migration|database|delete|rm -rf)\b/i.test(prompt)) {
-      return { code: 0, stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: 'Vibe Guardrails: this prompt appears high-risk. Start with risk classification and a gate artifact before implementation.' } }) };
+      return { code: 0, stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: 'AnyHarness: this prompt appears high-risk. Start with risk classification and a gate artifact before implementation.' } }) };
     }
   }
   return { code: 0, stdout: '' };

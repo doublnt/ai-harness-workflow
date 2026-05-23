@@ -59,25 +59,25 @@ function cmdInit(args) {
   const report = scanProject(process.cwd());
 
   if (dryRun) {
-    console.log('Vibe Guardrails init dry run');
+    console.log('AnyHarness init dry run');
     printJson({ profile, mode, target, report, wouldCreate: plannedInitFiles(profile, target) });
     return;
   }
 
   ensureConfig(process.cwd(), { config: { mode, profile, target } });
-  const dirs = ['.guardrails/gates', '.guardrails/approvals', '.guardrails/baselines', '.guardrails/drafts', 'docs/gates'];
+  const dirs = ['.anyharness/gates', '.anyharness/approvals', '.anyharness/baselines', '.anyharness/drafts', 'docs/gates'];
   for (const d of dirs) fs.mkdirSync(path.join(process.cwd(), d), { recursive: true });
-  writeJson(path.join(process.cwd(), '.guardrails', 'baselines', 'project-scan.json'), report);
+  writeJson(path.join(process.cwd(), '.anyharness', 'baselines', 'project-scan.json'), report);
 
   const created = [];
-  safeWrite('GUARDRAILS.md', guardrailsCore(), '.guardrails/drafts/GUARDRAILS.md', created);
+  safeWrite('ANYHARNESS.md', guardrailsCore(), '.anyharness/drafts/ANYHARNESS.md', created);
 
   if (profile === 'project' || profile === 'harness') {
     if (target === 'detect' || target === 'codex' || target === 'both') {
-      safeWrite('AGENTS.md', agentsInstructions(), '.guardrails/drafts/AGENTS.append.md', created);
+      safeWrite('AGENTS.md', agentsInstructions(), '.anyharness/drafts/AGENTS.append.md', created);
     }
     if (target === 'detect' || target === 'claude' || target === 'both') {
-      safeWrite('CLAUDE.md', claudeInstructions(), '.guardrails/drafts/CLAUDE.append.md', created);
+      safeWrite('CLAUDE.md', claudeInstructions(), '.anyharness/drafts/CLAUDE.append.md', created);
     }
   }
 
@@ -86,21 +86,21 @@ function cmdInit(args) {
     if (installHooks) installGitHooks(process.cwd());
   }
 
-  console.log(`Initialized Vibe Guardrails ${VERSION} in ${process.cwd()}`);
+  console.log(`Initialized AnyHarness ${VERSION} in ${process.cwd()}`);
   console.log(`Profile: ${profile}`);
   console.log(`Mode: ${mode}`);
   console.log(`Target: ${target}`);
   console.log(`Created or drafted: ${created.join(', ') || 'none'}`);
-  if (profile === 'harness' && !installHooks) console.log('Run `vibe-guardrails install-hooks` to enable local Git hooks.');
+  if (profile === 'harness' && !installHooks) console.log('Run `anyharness install-hooks` to enable local Git hooks.');
 }
 
 function plannedInitFiles(profile, target) {
-  const files = ['.guardrails/config.json', '.guardrails/baselines/project-scan.json', 'GUARDRAILS.md'];
+  const files = ['.anyharness/config.json', '.anyharness/baselines/project-scan.json', 'ANYHARNESS.md'];
   if (profile === 'project' || profile === 'harness') {
-    if (target === 'detect' || target === 'codex' || target === 'both') files.push('AGENTS.md or .guardrails/drafts/AGENTS.append.md');
-    if (target === 'detect' || target === 'claude' || target === 'both') files.push('CLAUDE.md or .guardrails/drafts/CLAUDE.append.md');
+    if (target === 'detect' || target === 'codex' || target === 'both') files.push('AGENTS.md or .anyharness/drafts/AGENTS.append.md');
+    if (target === 'detect' || target === 'claude' || target === 'both') files.push('CLAUDE.md or .anyharness/drafts/CLAUDE.append.md');
   }
-  if (profile === 'harness') files.push('.github/workflows/vibe-guardrails.yml or .guardrails/drafts/vibe-guardrails.yml');
+  if (profile === 'harness') files.push('.github/workflows/anyharness.yml or .anyharness/drafts/anyharness.yml');
   return files;
 }
 
@@ -116,15 +116,15 @@ function safeWrite(rel, content, draftRel, created) {
 }
 
 function guardrailsCore() {
-  return `# Vibe Guardrails Core\n\n1. Classify Risk First.\n2. Keep Changes Surgical.\n3. Require Evidence.\n4. Block Unsafe Work.\n\nFor non-trivial work, end with:\n\n\`\`\`text\nRisk Level:\nAssumptions:\nUnknowns:\nFiles Changed:\nTests:\nSecurity Considerations:\nRollback Plan:\nHuman Approval Required:\n\`\`\`\n\nRed Zone work includes auth, authorization, payment, migrations, secrets, CI/deploy, production data, and AI governance files.\n`;
+  return `# AnyHarness Core\n\n1. Classify Risk First.\n2. Keep Changes Surgical.\n3. Require Evidence.\n4. Block Unsafe Work.\n\nFor non-trivial work, end with:\n\n\`\`\`text\nRisk Level:\nAssumptions:\nUnknowns:\nFiles Changed:\nTests:\nSecurity Considerations:\nRollback Plan:\nHuman Approval Required:\n\`\`\`\n\nRed Zone work includes auth, authorization, payment, migrations, secrets, CI/deploy, production data, and AI governance files.\n`;
 }
 
 function agentsInstructions() {
-  return `# AGENTS.md\n\nThis project uses AI Harness Guardrails.\n\nBefore implementation:\n\n1. Read GUARDRAILS.md.\n2. Classify task risk: L0, L1, L2, L3.\n3. Keep changes surgical.\n4. Do not modify Red Zone files without human approval.\n5. Do not claim tests passed unless they were actually run.\n6. For L2/L3 work, create gate artifacts under .guardrails/gates and record approval when required.\n\nUse AI Harness Guardrails skills for planning, review, testing, security review, and release checks.\n`;
+  return `# AGENTS.md\n\nThis project uses AnyHarness.\n\nBefore implementation:\n\n1. Read ANYHARNESS.md.\n2. Classify task risk: L0, L1, L2, L3.\n3. Keep changes surgical.\n4. Do not modify Red Zone files without human approval.\n5. Do not claim tests passed unless they were actually run.\n6. For L2/L3 work, create gate artifacts under .anyharness/gates and record approval when required.\n\nUse AnyHarness skills for planning, review, testing, security review, and release checks.\n`;
 }
 
 function claudeInstructions() {
-  return `# CLAUDE.md\n\nThis project uses AI Harness Guardrails.\n\nRequired reading before changes:\n\n- GUARDRAILS.md\n- .guardrails/config.json, if present\n\nUse the AI Harness Guardrails plugin skills:\n\n- /ai-harness-guardrails:guardrails-core\n- /ai-harness-guardrails:risk-classify\n- /ai-harness-guardrails:new-feature\n- /ai-harness-guardrails:code-review\n- /ai-harness-guardrails:test-plan\n- /ai-harness-guardrails:security-review\n- /ai-harness-guardrails:release-check\n\nDo not modify Red Zone files without explicit approval and required gates.\n`;
+  return `# CLAUDE.md\n\nThis project uses AnyHarness.\n\nRequired reading before changes:\n\n- ANYHARNESS.md\n- .anyharness/config.json, if present\n\nUse the AnyHarness plugin skills:\n\n- /anyharness:harness-core\n- /anyharness:risk-classify\n- /anyharness:new-feature\n- /anyharness:code-review\n- /anyharness:test-plan\n- /anyharness:security-review\n- /anyharness:release-check\n\nDo not modify Red Zone files without explicit approval and required gates.\n`;
 }
 
 function cmdCheck(args) {
@@ -135,11 +135,11 @@ function cmdCheck(args) {
 
 function cmdCommitMsg(args) {
   const file = args[0];
-  if (!file) throw new Error('Usage: vibe-guardrails commit-msg <path-to-message-file>');
+  if (!file) throw new Error('Usage: anyharness commit-msg <path-to-message-file>');
   const message = readText(file);
   const result = validateCommitMessage(message, loadConfig(process.cwd()));
   if (!result.ok) {
-    console.error('Commit message blocked by Vibe Guardrails.');
+    console.error('Commit message blocked by AnyHarness.');
     for (const e of result.errors) console.error(`- ${e}`);
     process.exit(1);
   }
@@ -168,31 +168,31 @@ function cmdCiTemplate(args) {
 }
 
 function ciTemplateContent() {
-  const source = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'templates', 'project', 'github-actions', 'vibe-guardrails.yml');
+  const source = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'templates', 'project', 'github-actions', 'anyharness.yml');
   return readText(source);
 }
 
 function writeCiTemplate(write, created = []) {
   if (!write) return;
-  safeWrite('.github/workflows/vibe-guardrails.yml', ciTemplateContent(), '.guardrails/drafts/vibe-guardrails.yml', created);
+  safeWrite('.github/workflows/anyharness.yml', ciTemplateContent(), '.anyharness/drafts/anyharness.yml', created);
 }
 
 function cmdCursorTemplate(args) {
-  const source = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'adapters', 'cursor', 'vibe-guardrails.mdc');
+  const source = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'adapters', 'cursor', 'anyharness.mdc');
   const content = readText(source);
   if (!has(args, '--write')) {
     console.log(content);
     return;
   }
   const created = [];
-  safeWrite('.cursor/rules/vibe-guardrails.mdc', content, '.guardrails/drafts/vibe-guardrails.cursor.mdc', created);
+  safeWrite('.cursor/rules/anyharness.mdc', content, '.anyharness/drafts/anyharness.cursor.mdc', created);
   console.log(`Created or drafted: ${created.join(', ')}`);
 }
 
 function cmdDoctor() {
   const report = scanProject(process.cwd());
   const config = loadConfig(process.cwd());
-  console.log('Vibe Guardrails Doctor');
+  console.log('AnyHarness Doctor');
   console.log(`- Version: ${VERSION}`);
   console.log(`- Mode: ${config.mode}`);
   console.log(`- Project: ${report.name}`);
@@ -210,12 +210,12 @@ function cmdGate(args) {
     printJson(gate);
   } else if (sub === 'approve') {
     const id = args[1];
-    if (!id) throw new Error('Usage: vibe-guardrails gate approve <gate-id>');
+    if (!id) throw new Error('Usage: anyharness gate approve <gate-id>');
     printJson(approveGate(id, process.cwd(), value(args, '--notes', '')));
   } else if (sub === 'status') {
     printJson(listGateArtifacts(process.cwd()));
   } else {
-    console.log('Usage: vibe-guardrails gate create|approve|status');
+    console.log('Usage: anyharness gate create|approve|status');
   }
 }
 
@@ -233,5 +233,5 @@ async function cmdHook(args) {
 }
 
 function help() {
-  console.log(`AI Harness Guardrails ${VERSION}\n\nModes:\n  Lite     Plugin skill only, no repo enforcement\n  Project  Project-local GUARDRAILS.md + agent instructions\n  Harness  Project-local rules + hooks + CI gate\n\nCommands:\n  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]\n  scan [--json]\n  check [--staged|--ci|--push] [--json]\n  commit-msg <file>\n  install-hooks\n  uninstall-hooks\n  ci-template [--write]\n  cursor-template [--write]\n  gate create --task <text> --risk L2 --gates design,security,test\n  gate approve <gate-id>\n  gate status\n  doctor\n  hook <event>\n`);
+  console.log(`AnyHarness ${VERSION}\n\nModes:\n  Lite     Plugin skill only, no repo enforcement\n  Project  Project-local ANYHARNESS.md + agent instructions\n  Harness  Project-local rules + hooks + CI gate\n\nCommands:\n  init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]\n  scan [--json]\n  check [--staged|--ci|--push] [--json]\n  commit-msg <file>\n  install-hooks\n  uninstall-hooks\n  ci-template [--write]\n  cursor-template [--write]\n  gate create --task <text> --risk L2 --gates design,security,test\n  gate approve <gate-id>\n  gate status\n  doctor\n  hook <event>\n`);
 }

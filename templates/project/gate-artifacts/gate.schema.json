@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Vibe Guardrails Gate Artifact",
+  "title": "AnyHarness Gate Artifact",
   "type": "object",
   "required": [
     "id",

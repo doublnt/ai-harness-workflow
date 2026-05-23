@@ -1,257 +1,747 @@
-# AI Harness Guardrails
+# AnyHarness
 
-AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.
+**AnyHarness** is an installable AI development harness for Claude Code, Codex, Cursor, Git hooks, and CI.
 
-This repository contains the final version of AI Harness Guardrails: a lightweight behavioral skill plus an optional closed-loop governance harness for Claude Code, Codex, Cursor, Git hooks, and CI gates.
+It gives AI coding agents a simple behavioral surface and, when you need it, a closed-loop enforcement layer:
 
-## The Problem
+1. **Classify Risk First**
+2. **Keep Changes Surgical**
+3. **Require Evidence**
+4. **Block Unsafe Work**
 
-AI coding agents often:
+AnyHarness is designed for both new and existing repositories. A beginner can start with one lightweight skill. A production team can enable hooks, commit gates, CI gates, gate artifacts, approval records, and docs-drift checks.
 
-- make hidden assumptions;
-- over-engineer small tasks;
-- touch unrelated files;
-- claim tests passed without evidence;
-- modify risky files without review;
-- leave tests, docs, release plans, or rollback plans behind.
+> Package name: `anyharness`  
+> Display name: `AnyHarness`  
+> CLI command: `anyharness`  
+> Claude command namespace: `/anyharness:*`
 
-## The Four Rules
+---
 
-1. **Classify Risk First** — identify L0/L1/L2/L3 before coding.
-2. **Keep Changes Surgical** — every changed line must trace to the user's request.
-3. **Require Evidence** — tests, commands, files, gate artifacts, or explicit untested risks.
-4. **Block Unsafe Work** — secrets, migrations, auth, payments, CI/deploy, and production changes require gates and approval.
+## What problem does AnyHarness solve?
 
-## Choose Your Mode
+AI coding tools can generate code quickly, but they often fail in predictable ways:
 
-| Mode | What it does | Best for |
-|---|---|---|
-| Lite | Installs the behavior skill only. No hooks, no repository writes. | Solo devs, low-risk repos, quick adoption |
-| Project | Generates project-local `GUARDRAILS.md`, `AGENTS.md`/`CLAUDE.md` drafts, risk policy, and gate folders. | Existing projects that want consistent AI workflow |
-| Harness | Adds agent hooks, Git hooks, CI gates, gate artifacts, docs drift detection, and commit-message enforcement. | Teams, production apps, high-risk systems |
+- They make hidden assumptions.
+- They over-engineer simple tasks.
+- They touch unrelated files.
+- They modify authentication, migrations, CI, or deployment files without enough review.
+- They claim tests passed even when tests were not run.
+- They update code but forget tests, docs, release notes, or rollback plans.
 
-## What Is Included
-
-- Claude Code plugin with skills and lifecycle hooks.
-- Codex plugin with skills and lifecycle hooks.
-- Cursor Lite adapter via `.cursor/rules/vibe-guardrails.mdc`.
-- `guardrails-core` skill for a concise behavioral entrypoint.
-- Project initialization workflow.
-- Risk classification, feature planning, design review, implementation planning, code review, test planning, security review, and release checks.
-- CLI checker for Git hooks and CI.
-- Gate artifacts and approval ledger.
-- Docs drift detection.
-- Bilingual documentation.
-
-## Install: Claude Code
-
-Add the local marketplace from this repository:
+AnyHarness turns soft AI coding guidelines into an operational harness:
 
 ```text
-/plugin marketplace add ./path/to/ai-harness-guardrails-final
-/plugin install ai-harness-guardrails@vibe-guardrails
+Skills -> Agent hooks -> Git hooks -> CI gates -> Gate artifacts
 ```
 
-Then use:
+This means AI can still move fast, but risky work gets classified, reviewed, tested, documented, and blocked when necessary.
+
+---
+
+## Choose an adoption mode
+
+| Mode | What it does | Best for | Repo changes |
+|---|---|---|---|
+| **Lite** | Uses the `harness-core` skill only. No hooks. No generated project files. | Beginners, experiments, solo projects | None |
+| **Project** | Generates project-local AI instructions such as `ANYHARNESS.md`, `AGENTS.md`, and `CLAUDE.md` drafts. | New projects, brownfield repos, teams adopting AI workflow rules | Low |
+| **Harness** | Adds `.anyharness/`, lifecycle hooks, Git hooks, CI gate templates, gate artifacts, approvals, and docs-drift checks. | Production projects, team repos, security-sensitive systems | Medium |
+
+Recommended path:
 
 ```text
-/ai-harness-guardrails:guardrails-core
-/ai-harness-guardrails:init-project
-/ai-harness-guardrails:risk-classify
-/ai-harness-guardrails:new-feature
-/ai-harness-guardrails:design-review
-/ai-harness-guardrails:implementation-plan
-/ai-harness-guardrails:code-review
-/ai-harness-guardrails:test-plan
-/ai-harness-guardrails:security-review
-/ai-harness-guardrails:release-check
+Start with Lite -> initialize Project mode -> enable Harness mode when the team trusts the workflow.
 ```
 
-## Install: Codex
+---
 
-Add the local marketplace:
+## Install for Claude Code
+
+From a local checkout:
 
 ```text
-codex plugin marketplace add ./path/to/ai-harness-guardrails-final
+/plugin marketplace add ./path/to/AnyHarness
+/plugin install anyharness@anyharness
 ```
 
-Then install `ai-harness-guardrails` from the marketplace and invoke naturally:
+After installation, Claude Code exposes namespaced commands:
 
 ```text
-Use AI Harness Guardrails Core for this coding task.
-Use AI Harness Guardrails to initialize this repository.
-Use AI Harness Guardrails to review this diff before commit.
+/anyharness:harness-core
+/anyharness:init-project
+/anyharness:risk-classify
+/anyharness:new-feature
+/anyharness:design-review
+/anyharness:implementation-plan
+/anyharness:code-review
+/anyharness:test-plan
+/anyharness:security-review
+/anyharness:release-check
 ```
 
-## Use With Cursor
+Start with:
 
-Copy the Lite rule into your project:
+```text
+/anyharness:harness-core
+```
+
+Then initialize a repository:
+
+```text
+/anyharness:init-project
+```
+
+---
+
+## Install for Codex
+
+From a local checkout:
+
+```text
+codex plugin marketplace add ./path/to/AnyHarness
+```
+
+Then install `anyharness` from the local marketplace.
+
+Use natural language prompts:
+
+```text
+Use AnyHarness core rules for this change.
+Use AnyHarness to initialize this repository.
+Use AnyHarness to review this diff before commit.
+Use AnyHarness to prepare a release check.
+```
+
+---
+
+## Install for Cursor
+
+Cursor support is Lite-only. It gives the model the core behavioral rules, but does not provide lifecycle hooks.
+
+Copy the adapter into a project:
 
 ```bash
 mkdir -p .cursor/rules
-cp plugins/cursor/ai-harness-guardrails/.cursor/rules/vibe-guardrails.mdc .cursor/rules/vibe-guardrails.mdc
+cp adapters/cursor/anyharness.mdc .cursor/rules/anyharness.mdc
 ```
 
-Or print it from the CLI:
+Or generate it through the CLI:
 
 ```bash
-node bin/vibe-guardrails.mjs cursor-template
+npx anyharness cursor-template --write
 ```
 
-## CLI Quick Start
+---
 
-Run locally from this repository:
+## Install the CLI
+
+During development, run it locally:
 
 ```bash
-node bin/vibe-guardrails.mjs --help
-node bin/vibe-guardrails.mjs init --profile project --target detect
-node bin/vibe-guardrails.mjs check --staged
+node bin/anyharness.mjs --help
+node bin/anyharness.mjs scan --json
+node bin/anyharness.mjs init --dry-run
 ```
 
-After npm publishing, use:
+After publishing or linking the package:
 
 ```bash
-npx ai-harness-guardrails init --profile harness --target detect --install-hooks
-npx ai-harness-guardrails check --ci
+npx anyharness --help
+npx anyharness scan --json
+npx anyharness init --profile project --target detect
 ```
 
-## Project Initialization
+The CLI is deterministic. It performs local checks and does not call external services.
 
-Recommended first run:
+---
+
+# Usage case 1: new project, solo developer, lowest friction
+
+Use Lite mode first.
+
+### Step 1: Install the plugin
+
+Claude:
+
+```text
+/plugin marketplace add ./path/to/AnyHarness
+/plugin install anyharness@anyharness
+```
+
+Codex:
+
+```text
+codex plugin marketplace add ./path/to/AnyHarness
+```
+
+### Step 2: Use the core skill
+
+Claude:
+
+```text
+/anyharness:harness-core
+```
+
+Codex:
+
+```text
+Use AnyHarness core rules while implementing this feature.
+```
+
+### Step 3: Ask AI to build normally, but with constraints
+
+Example:
+
+```text
+Use AnyHarness core rules. Add a basic settings page with name and email fields. Keep the change surgical and tell me what tests I should run.
+```
+
+Expected AI output should include:
+
+```text
+Risk Level:
+Assumptions:
+Unknowns:
+Files Changed:
+Tests:
+Security Considerations:
+Human Approval Required:
+```
+
+Use this mode when you do not want repository files changed yet.
+
+---
+
+# Usage case 2: new project, create project-local AI rules
+
+Use Project mode when you want every future AI session to understand the project rules.
+
+### Step 1: Dry-run first
 
 ```bash
-vibe-guardrails init --profile project --target detect --mode advisory
+npx anyharness init --profile project --target detect --dry-run
 ```
 
-For a team/production repository:
+This prints what would be created without writing files.
+
+### Step 2: Initialize Project mode
 
 ```bash
-vibe-guardrails init --profile harness --target both --mode enforcing --install-hooks
-vibe-guardrails ci-template --write
+npx anyharness init --profile project --target detect --mode advisory
 ```
 
-Initialization creates or drafts:
+This creates or drafts:
 
-- `GUARDRAILS.md`
-- `.guardrails/config.json`
-- `.guardrails/gates/`
-- `.guardrails/approvals/`
-- `.guardrails/baselines/project-scan.json`
-- `AGENTS.md` or `.guardrails/drafts/AGENTS.append.md`
-- `CLAUDE.md` or `.guardrails/drafts/CLAUDE.append.md`
-- optional Git hooks and GitHub Actions workflow
+```text
+.anyharness/config.json
+.anyharness/baselines/project-scan.json
+ANYHARNESS.md
+AGENTS.md or .anyharness/drafts/AGENTS.append.md
+CLAUDE.md or .anyharness/drafts/CLAUDE.append.md
+```
 
-Existing files are not overwritten. Conflicts are written to `.guardrails/drafts/`.
+Existing `AGENTS.md` or `CLAUDE.md` files are not overwritten. AnyHarness writes draft files instead.
 
-## Risk Levels
-
-| Level | Meaning | Examples | Gates |
-|---|---|---|---|
-| L0 | Low risk | docs typo, label change, small style tweak | basic self-check |
-| L1 | Normal feature | UI component, ordinary CRUD, local refactor | requirement, review, test |
-| L2 | Core or sensitive | auth, authorization, payments, files, user data, external APIs, agent tool permissions | design, security, test, release, approval |
-| L3 | Critical or irreversible | migrations, production data, deploy strategy, public API breakage, architecture migration | full design, migration, rollback, CI, explicit approval |
-
-## Closed-loop Harness
-
-The Harness mode adds four layers:
-
-1. **Skills** — tell the AI how to work.
-2. **Agent hooks** — block dangerous tool use and incomplete final summaries.
-3. **Git hooks** — block bad commits locally.
-4. **CI gate** — enforce guardrails at PR/merge time.
-
-Local Git hooks:
+### Step 3: Review and commit
 
 ```bash
-vibe-guardrails install-hooks
+git diff
+git add ANYHARNESS.md AGENTS.md CLAUDE.md .anyharness/config.json .anyharness/baselines/project-scan.json
+git commit -m "chore(ai): initialize AnyHarness [risk:L1]"
 ```
 
-CI template:
+### Step 4: Start using feature workflows
+
+Claude:
+
+```text
+/anyharness:new-feature Add password reset by email
+```
+
+Codex:
+
+```text
+Use AnyHarness new-feature workflow to plan password reset by email.
+```
+
+The AI should produce a requirement summary, risk classification, design options, implementation plan, tests, Unknowns, and approval requirements before coding.
+
+---
+
+# Usage case 3: new project, production-ready harness
+
+Use Harness mode when you want checks to block unsafe work.
+
+### Step 1: Initialize Harness mode
 
 ```bash
-vibe-guardrails ci-template --write
+npx anyharness init --profile harness --target both --mode enforcing --install-hooks
 ```
 
-## Commit Message Gate
+This creates or drafts:
 
-Default format:
+```text
+.anyharness/config.json
+.anyharness/gates/
+.anyharness/approvals/
+.anyharness/baselines/project-scan.json
+.anyharness/drafts/
+ANYHARNESS.md
+AGENTS.md or draft append
+CLAUDE.md or draft append
+.github/workflows/anyharness.yml or draft
+.githooks/pre-commit
+.githooks/commit-msg
+.githooks/pre-push
+```
+
+It also sets:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+### Step 2: Check the repository
+
+```bash
+npx anyharness doctor
+npx anyharness check --staged
+```
+
+### Step 3: Use gate artifacts for risky work
+
+For Level 2 or Level 3 work:
+
+```bash
+npx anyharness gate create --task "Add refresh token rotation" --risk L2 --gates design,security,test,release
+```
+
+After human review:
+
+```bash
+npx anyharness gate approve 2026-05-23-add-refresh-token-rotation --notes "Approved after design and security review"
+```
+
+### Step 4: Commit with risk metadata
+
+Level 2/3 commits need a risk tag and trailers:
 
 ```text
 feat(auth): rotate refresh tokens [risk:L2]
-```
 
-Level 2/3 commits require trailers:
-
-```text
 Risk-Level: L2
-Gate-Review: .guardrails/gates/2026-05-23-refresh-token.json
-Tests: npm test
+Gate-Review: .anyharness/gates/2026-05-23-add-refresh-token-rotation.json
 Human-Approval: required
-Rollback: docs/release/2026-05-23-refresh-token.md
+Tests: npm test
+Rollback: docs/release/refresh-token-rollback.md
 ```
 
-## Gate Artifacts
+If this metadata is missing, `commit-msg` blocks the commit.
 
-Create a gate:
+---
 
-```bash
-vibe-guardrails gate create --task "rotate refresh tokens" --risk L2 --gates design,security,test,release
-```
+# Usage case 4: existing project / brownfield repo
 
-Approve a gate:
+For an old project, do not enable strict enforcement immediately.
 
-```bash
-vibe-guardrails gate approve 2026-05-23-rotate-refresh-tokens --notes "Approved after security review."
-```
-
-Check status:
-
-```bash
-vibe-guardrails gate status
-```
-
-## Repository Layout
+### Recommended rollout
 
 ```text
-plugins/claude/ai-harness-guardrails/   Claude plugin
-plugins/codex/ai-harness-guardrails/    Codex plugin
-plugins/cursor/ai-harness-guardrails/   Cursor Lite rule
-src/                                      CLI and deterministic checks
-templates/project/                        Git hooks, CI, config, gate schemas
-docs/                                     implementation docs
-EXAMPLES.md                               bad vs good examples
-GUARDRAILS.md                             minimal core rules
+Day 1: scan and dry-run
+Week 1: Project mode, advisory
+Week 2: Harness mode, advisory
+Week 3: enforcing for Red Zone and commit messages
+Later: strict mode for docs drift and release gates
 ```
 
-## Validate This Repository
+### Step 1: Scan without changing anything
 
 ```bash
-npm test
+npx anyharness scan --json
+npx anyharness init --profile project --target detect --dry-run
+```
+
+Look for:
+
+```text
+Detected AI workflows
+Detected package manager
+Detected tests and lint commands
+Risk signals
+Unknowns
+Files that would be created
+```
+
+### Step 2: Start in advisory mode
+
+```bash
+npx anyharness init --profile project --target detect --mode advisory
+```
+
+Advisory mode reports risks but does not aggressively block normal work.
+
+### Step 3: Review drafts instead of overwriting files
+
+If the repo already has `AGENTS.md` or `CLAUDE.md`, AnyHarness writes:
+
+```text
+.anyharness/drafts/AGENTS.append.md
+.anyharness/drafts/CLAUDE.append.md
+```
+
+Manually merge only the parts you want.
+
+### Step 4: Enable harness gradually
+
+```bash
+npx anyharness init --profile harness --target detect --mode advisory
+npx anyharness install-hooks
+```
+
+After a few successful commits:
+
+```json
+{
+  "mode": "enforcing"
+}
+```
+
+in `.anyharness/config.json`.
+
+Move to strict mode only after CI and team habits are stable.
+
+---
+
+# Usage case 5: existing Claude Code project
+
+If your project already has Claude Code files:
+
+```text
+CLAUDE.md
+.claude/
+.claude/settings.json
+.claude/commands/
+.claude/skills/
+```
+
+Run:
+
+```text
+/anyharness:init-project
+```
+
+Or CLI:
+
+```bash
+npx anyharness init --profile project --target claude --mode advisory
+```
+
+AnyHarness will not overwrite existing Claude files. It creates draft append files under `.anyharness/drafts/` when conflicts exist.
+
+Recommended next steps:
+
+1. Merge the short AnyHarness rules into `CLAUDE.md`.
+2. Keep `ANYHARNESS.md` as the concise project-local rule file.
+3. Use `/anyharness:code-review` before accepting large AI diffs.
+4. Enable Harness mode later if you want hooks and commit blocking.
+
+---
+
+# Usage case 6: existing Codex project
+
+If your project already has Codex files:
+
+```text
+AGENTS.md
+.codex/
+.agents/skills/
+```
+
+Run:
+
+```bash
+npx anyharness init --profile project --target codex --mode advisory
+```
+
+Or ask Codex:
+
+```text
+Use AnyHarness to initialize this repository for Codex only.
+```
+
+Recommended next steps:
+
+1. Merge `.anyharness/drafts/AGENTS.append.md` into your existing `AGENTS.md`.
+2. Keep AnyHarness skills installed globally or as a repo marketplace.
+3. Add CI only after local checks are understood.
+
+---
+
+# Usage case 7: Spec Kit project
+
+If your project already uses Spec Kit, AnyHarness should not replace the Spec Kit workflow. Use it as the governance layer.
+
+Suggested flow:
+
+```text
+Spec Kit: specify -> plan -> tasks -> implement
+AnyHarness: risk classify -> design/security/test/release gates -> commit/CI enforcement
+```
+
+Initialize in advisory mode first:
+
+```bash
+npx anyharness init --profile project --target detect --mode advisory
+```
+
+For high-risk specs, require gate artifacts:
+
+```bash
+npx anyharness gate create --task "Spec: user data export" --risk L2 --gates design,security,test,release
+```
+
+---
+
+# Usage case 8: AI-generated diff review before commit
+
+Claude:
+
+```text
+/anyharness:code-review
+```
+
+Codex:
+
+```text
+Use AnyHarness to review the current diff before commit.
+```
+
+Expected review output:
+
+```text
+Summary:
+Risk Level:
+Critical Issues:
+Security Issues:
+Testing Gaps:
+Design Issues:
+Performance Concerns:
+Docs Drift:
+Unknowns:
+Verdict: Pass / Needs Changes / Blocked
+```
+
+If the diff touches authentication, migrations, CI, deployment, payment, secrets, or production data, expect Level 2 or Level 3.
+
+---
+
+# Usage case 9: docs drift protection
+
+AnyHarness checks whether code changes imply documentation updates.
+
+Examples:
+
+| Changed files | Expected documentation |
+|---|---|
+| `app/api/**`, `src/routes/**`, `openapi.*` | `docs/api/**`, `README.md`, or gate justification |
+| `prisma/schema.prisma`, `migrations/**` | database docs, migration notes, or gate artifact |
+| `.env.example`, `Dockerfile`, deployment configs | deployment docs or README |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/**`, `.codex/**` | AI/governance docs or changelog |
+
+If docs were intentionally not changed, add a gate artifact explaining why:
+
+```json
+{
+  "docsImpact": "No public behavior change. Internal refactor only."
+}
+```
+
+---
+
+# Usage case 10: commit and CI enforcement
+
+Local check:
+
+```bash
+npx anyharness check --staged
+```
+
+Commit message check:
+
+```bash
+npx anyharness commit-msg .git/COMMIT_EDITMSG
+```
+
+CI check:
+
+```bash
+npx anyharness ci-template --write
+git add .github/workflows/anyharness.yml
+git commit -m "ci: add AnyHarness gate [risk:L1]"
+```
+
+The generated GitHub Actions workflow runs:
+
+```bash
+npx anyharness check --ci
+```
+
+CI is the merge-time backstop. Local Git hooks are helpful, but they can be bypassed, so teams should use CI for real enforcement.
+
+---
+
+## CLI reference
+
+```bash
+anyharness scan [--json]
+anyharness init [--profile lite|project|harness] [--mode advisory|enforcing|strict] [--target detect|claude|codex|both] [--install-hooks] [--dry-run]
+anyharness check [--staged|--push|--ci] [--json]
+anyharness commit-msg <message-file>
+anyharness install-hooks
+anyharness uninstall-hooks
+anyharness ci-template [--write]
+anyharness cursor-template [--write]
+anyharness gate create --task <text> --risk L2 --gates design,security,test
+anyharness gate approve <gate-id> --notes <text>
+anyharness gate status
+anyharness doctor
+```
+
+---
+
+## Enforcement modes
+
+| Mode | Behavior |
+|---|---|
+| `advisory` | Warns about problems. Best for adoption and old projects. |
+| `enforcing` | Blocks clear unsafe work such as Red Zone changes without required gates. |
+| `strict` | Blocks missing docs, missing gate artifacts, missing approval, and incomplete high-risk workflows. |
+
+Default:
+
+```text
+Project mode -> advisory
+Harness mode -> enforcing
+```
+
+---
+
+## Risk levels
+
+| Level | Meaning | Examples | Required gates |
+|---|---|---|---|
+| L0 | Low risk | copy change, style tweak, comments | basic self-check |
+| L1 | Normal feature | small feature, normal bug fix, simple API | requirement, implementation plan, tests |
+| L2 | Core or sensitive change | auth, permissions, uploads, database schema, external API, user data | design, security, tests, rollback, approval |
+| L3 | Critical or irreversible change | production data, architecture migration, breaking API, deployment strategy | full design, migration, release, rollback, observability, explicit approval |
+
+---
+
+## Files created by Project mode
+
+```text
+.anyharness/config.json
+.anyharness/baselines/project-scan.json
+.anyharness/drafts/
+ANYHARNESS.md
+AGENTS.md or .anyharness/drafts/AGENTS.append.md
+CLAUDE.md or .anyharness/drafts/CLAUDE.append.md
+```
+
+## Files created by Harness mode
+
+```text
+.anyharness/config.json
+.anyharness/gates/
+.anyharness/approvals/
+.anyharness/baselines/project-scan.json
+.anyharness/drafts/
+ANYHARNESS.md
+AGENTS.md / CLAUDE.md drafts when needed
+.githooks/pre-commit
+.githooks/commit-msg
+.githooks/pre-push
+.github/workflows/anyharness.yml or draft
+```
+
+---
+
+## Safety model
+
+AnyHarness is intentionally conservative:
+
+- Installing the plugin does not modify your repository.
+- `init` supports dry-run.
+- Existing files are not overwritten; drafts are created instead.
+- Hooks are local and deterministic.
+- Hooks do not call external services.
+- Real `.env` files are treated as sensitive.
+- High-risk work requires human approval.
+- CI should be used as the final merge gate.
+
+---
+
+## Repository layout
+
+```text
+plugins/claude/anyharness/      Claude Code plugin
+plugins/codex/anyharness/       Codex plugin
+plugins/cursor/anyharness/      Cursor Lite adapter
+src/                            CLI and deterministic checker
+templates/project/              Git hooks, CI, gate schemas, config templates
+docs/                           Design and operational docs
+ANYHARNESS.md                   Compact core rules
+EXAMPLES.md                     Bad vs good AI coding examples
+```
+
+---
+
+## Validate this repository
+
+```bash
+npm install
 npm run validate
+npm test
 npm run check
 ```
 
 Expected result:
 
 ```text
-Validation passed. final AI Harness Guardrails layout is valid.
+Validation passed. final AnyHarness layout is valid.
 Unit tests passed.
 ```
 
-## Safety Notes
+---
 
-- Installing the plugin should not modify a target repository.
-- Repository files are only written after explicit initialization.
-- Existing files are not overwritten; drafts are created instead.
-- Hooks should be reviewed and trusted before enabling.
-- Local Git hooks can be bypassed, so CI gates are the enforcement backstop.
+## FAQ
 
-## Related Files
+### Is AnyHarness only for Claude or Codex?
 
-- [GUARDRAILS.md](./GUARDRAILS.md)
-- [EXAMPLES.md](./EXAMPLES.md)
-- [README.zh-CN.md](./README.zh-CN.md)
-- [docs/hooks.md](./docs/hooks.md)
-- [docs/git-hooks.md](./docs/git-hooks.md)
-- [docs/ci-gates.md](./docs/ci-gates.md)
+No. Claude and Codex get plugin support. Cursor gets a Lite adapter. The CLI, Git hooks, and CI gates are tool-agnostic.
+
+### Does AnyHarness replace Spec Kit?
+
+No. Spec Kit helps drive specs, plans, tasks, and implementation. AnyHarness adds governance: risk levels, review gates, security gates, commit rules, CI checks, docs-drift checks, and approval records.
+
+### Does Lite mode modify my repo?
+
+No. Lite mode is just the installed skill behavior.
+
+### Why is the npm package lowercase?
+
+The project display name is **AnyHarness**. The package name is `anyharness` for package-manager compatibility.
+
+### Can hooks be too strict?
+
+Yes. Start in `advisory`, move to `enforcing`, then use `strict` only after the workflow is stable.
+
+### Can developers bypass Git hooks?
+
+Yes, local Git hooks can be bypassed. Use CI gates for real enforcement.
+
+---
+
+## License
+
+MIT

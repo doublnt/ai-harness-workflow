@@ -1,0 +1,22 @@
+{
+  "name": "anyharness",
+  "displayName": "AnyHarness",
+  "version": "0.3.0",
+  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
+  "author": {
+    "name": "AnyHarness Contributors"
+  },
+  "repository": "https://github.com/your-org/anyharness",
+  "license": "MIT",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "keywords": [
+    "ai-coding",
+    "guardrails",
+    "skills",
+    "hooks",
+    "code-review",
+    "testing",
+    "security"
+  ]
+}

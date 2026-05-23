@@ -3,13 +3,13 @@
 Install local hooks:
 
 ```bash
-vibe-guardrails init --mode enforcing
-vibe-guardrails install-hooks
+anyharness init --mode enforcing
+anyharness install-hooks
 ```
 
 Hooks:
 
-- `pre-commit`: runs `vibe-guardrails check --staged`
+- `pre-commit`: runs `anyharness check --staged`
 - `commit-msg`: enforces risk tags and L2/L3 trailers
 - `pre-push`: runs stronger checks before push
 

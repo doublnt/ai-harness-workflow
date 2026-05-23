@@ -4,7 +4,7 @@ Run:
 
 ```bash
 npm test
-node bin/vibe-guardrails.mjs doctor
+node bin/anyharness.mjs doctor
 ```
 
 For hook changes, update:

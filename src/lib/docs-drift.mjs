@@ -7,7 +7,7 @@ export function checkDocsDrift(files, config) {
     const hits = files.filter((f) => pathMatches(f, rule.changed || []));
     if (hits.length === 0) continue;
     const docsHit = changedDocs.some((f) => pathMatches(f, rule.docs || []));
-    const gateHit = files.some((f) => /^\.guardrails\/gates\/.*\.(json|md)$/.test(f) || /^docs\/gates\//.test(f));
+    const gateHit = files.some((f) => /^\.anyharness\/gates\/.*\.(json|md)$/.test(f) || /^docs\/gates\//.test(f));
     if (!docsHit && !gateHit) {
       findings.push({ rule: rule.name, changed: hits, expectedDocs: rule.docs || [] });
     }

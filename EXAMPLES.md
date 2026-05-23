@@ -16,7 +16,7 @@ Bad behavior:
 The agent exports every user field, including email and internal notes, without asking about permissions, audit logs, rate limits, or privacy.
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 Risk Level: L2
@@ -39,7 +39,7 @@ Bad behavior:
 The agent rewrites the entire validation layer, changes public types, and updates unrelated form components.
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 Risk Level: L1
@@ -63,7 +63,7 @@ Bad behavior:
 Commit succeeds without updating API docs or explaining docs impact.
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 pre-commit blocks with Docs drift detected.
@@ -78,7 +78,7 @@ Bad commit:
 feat: update auth
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 commit-msg blocks.
@@ -94,7 +94,7 @@ Changed file:
 src/auth/session.ts
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 Agent hook blocks direct edit unless a security/design/test gate is created and human approval is recorded.
@@ -109,7 +109,7 @@ User asks:
 Change the button label from Submit to Save.
 ```
 
-Guardrails behavior:
+AnyHarness behavior:
 
 ```text
 Risk Level: L0

@@ -3,7 +3,7 @@ import { DEFAULT_CONFIG } from './default-config.mjs';
 import { exists, readJson, writeJson } from './utils.mjs';
 
 export function configPath(projectDir = process.cwd()) {
-  return path.join(projectDir, '.guardrails', 'config.json');
+  return path.join(projectDir, '.anyharness', 'config.json');
 }
 
 export function loadConfig(projectDir = process.cwd()) {

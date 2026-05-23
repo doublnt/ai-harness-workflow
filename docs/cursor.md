@@ -1,6 +1,6 @@
 # Cursor Adapter
 
-The Cursor adapter is intentionally Lite-only. It provides behavior guidance through `.cursor/rules/vibe-guardrails.mdc`.
+The Cursor adapter is intentionally Lite-only. It provides behavior guidance through `.cursor/rules/anyharness.mdc`.
 
 Use it when you want the four core rules without installing agent lifecycle hooks:
 

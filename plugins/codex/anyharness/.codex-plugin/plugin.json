@@ -1,0 +1,39 @@
+{
+  "name": "anyharness",
+  "version": "0.3.0",
+  "description": "AI coding guardrails that keep changes surgical, require evidence, and block unsafe work.",
+  "author": {
+    "name": "AnyHarness Contributors"
+  },
+  "homepage": "https://github.com/your-org/anyharness",
+  "repository": "https://github.com/your-org/anyharness",
+  "license": "MIT",
+  "keywords": [
+    "ai-coding",
+    "guardrails",
+    "skills",
+    "hooks",
+    "code-review",
+    "testing",
+    "security",
+    "ci"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "AnyHarness",
+    "shortDescription": "AI coding guardrails for safe, evidence-backed changes.",
+    "longDescription": "Use lightweight skills for everyday coding behavior or initialize a closed-loop harness with hooks, Git hooks, CI gates, gate artifacts, approvals, and docs drift checks.",
+    "developerName": "AnyHarness Contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use AnyHarness core rules for this change.",
+      "Use AnyHarness to initialize this repository.",
+      "Use AnyHarness to review this diff before commit."
+    ]
+  }
+}

@@ -4,8 +4,8 @@ The final package uses a simple surface and a strong execution core.
 
 ## Simple surface
 
-- `guardrails-core` skill.
-- `GUARDRAILS.md`.
+- `harness-core` skill.
+- `ANYHARNESS.md`.
 - `EXAMPLES.md`.
 - Lite/Project/Harness modes.
 - Cursor Lite adapter.

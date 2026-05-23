@@ -1,22 +1,22 @@
 # AGENTS.md
 
-This repository builds AI Harness Guardrails, an installable AI coding guardrails plugin plus optional closed-loop harness.
+This repository builds AnyHarness, an installable AI coding guardrails plugin plus optional closed-loop harness.
 
 ## Required context
 
 Before changing this repository, read:
 
 - `README.md`
-- `GUARDRAILS.md`
+- `ANYHARNESS.md`
 - `EXAMPLES.md`
 - `docs/architecture.md`
 - `docs/safety-model.md`
-- `plugins/claude/ai-harness-guardrails/`
-- `plugins/codex/ai-harness-guardrails/`
+- `plugins/claude/anyharness/`
+- `plugins/codex/anyharness/`
 
 ## Development rules
 
-1. Keep the lightweight surface simple: `guardrails-core`, `GUARDRAILS.md`, and examples must remain easy to understand.
+1. Keep the lightweight surface simple: `harness-core`, `ANYHARNESS.md`, and examples must remain easy to understand.
 2. Keep the enforcement core deterministic: hooks and CLI checks must not depend on network calls.
 3. Do not read real `.env` files in scanners, tests, or hooks.
 4. Preserve Claude and Codex plugin structures.

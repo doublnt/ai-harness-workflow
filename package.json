@@ -1,17 +1,17 @@
 {
-  "name": "ai-harness-guardrails",
+  "name": "anyharness",
   "version": "0.3.0",
-  "description": "AI coding guardrails with a simple behavioral surface and a closed-loop governance harness for skills, hooks, Git hooks, CI gates, and deterministic checks.",
+  "description": "AnyHarness provides AI coding guardrails with a simple behavioral surface and a closed-loop governance harness for skills, hooks, Git hooks, CI gates, and deterministic checks.",
   "type": "module",
   "bin": {
-    "vibe-guardrails": "./bin/vibe-guardrails.mjs"
+    "anyharness": "./bin/anyharness.mjs"
   },
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "test": "node scripts/validate.mjs && node test/run.mjs",
     "check": "npm run validate && npm test",
-    "demo:doctor": "node bin/vibe-guardrails.mjs doctor",
-    "demo:scan": "node bin/vibe-guardrails.mjs scan --json"
+    "demo:doctor": "node bin/anyharness.mjs doctor",
+    "demo:scan": "node bin/anyharness.mjs scan --json"
   },
   "keywords": [
     "agent",
@@ -40,8 +40,8 @@
     "CLAUDE.md",
     "EXAMPLES.md",
     "EXAMPLES.zh-CN.md",
-    "GUARDRAILS.md",
-    "GUARDRAILS.zh-CN.md",
+    "ANYHARNESS.md",
+    "ANYHARNESS.zh-CN.md",
     "LICENSE",
     "README.md",
     "README.zh-CN.md",
@@ -51,5 +51,11 @@
     "plugins",
     "src",
     "templates"
-  ]
+  ],
+  "displayName": "AnyHarness",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/anyharness.git"
+  },
+  "homepage": "https://github.com/your-org/anyharness"
 }

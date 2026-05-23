@@ -25,7 +25,7 @@ editing CLAUDE.md / AGENTS.md / agent config files without approval
 
 ## Safety
 
-Hooks do not access the network. They read hook JSON from stdin and project-local `.guardrails/config.json` only.
+Hooks do not access the network. They read hook JSON from stdin and project-local `.anyharness/config.json` only.
 
 ## Modes
 

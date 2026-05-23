@@ -3,11 +3,11 @@ import path from 'node:path';
 import { exists, readJson, writeJson, nowIso, slugify } from './utils.mjs';
 
 export function gateDir(projectDir = process.cwd()) {
-  return path.join(projectDir, '.guardrails', 'gates');
+  return path.join(projectDir, '.anyharness', 'gates');
 }
 
 export function approvalDir(projectDir = process.cwd()) {
-  return path.join(projectDir, '.guardrails', 'approvals');
+  return path.join(projectDir, '.anyharness', 'approvals');
 }
 
 export function listGateArtifacts(projectDir = process.cwd()) {
