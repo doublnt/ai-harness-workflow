@@ -1,450 +1,295 @@
-# AnyHarness 2.2
+# AnyHarness v3
 
-**AnyHarness** 是一个 AI 编程 harness。它做两件事：
+**安装插件，运行 AnyHarness，让它理解你的项目，然后生成项目专属的 AI 工程 harness。**
 
-1. **把规则注入给 LLM**：通过工具原生会读取的 `CLAUDE.md`、`AGENTS.md`、Cursor rules、Claude/Codex skills。
-2. **把规则变成可执行门禁**：通过 `npx anyharness`、agent hooks、Git hooks、CI gates、gate artifacts、approval records、commit message 检查和 docs drift 检查。
-
-v2.2 的使用模型非常简单：
-
-```bash
-# 新项目：一个命令
-npx anyharness new
-
-# 老项目：一个安全命令
-npx anyharness adopt
-```
-
-高级命令仍然保留，但大多数用户从 `new` 或 `adopt` 开始即可。
-
----
-
-## 为什么 `npx anyharness` 是关键入口
-
-Prompt 是 LLM 读取的规则；harness 是证明项目真的遵守规则的执行层。
+AnyHarness v3 是 **skill-first 自适应工程护栏**。它不是以 `npx` 为主的 CLI，也不是静态 checklist 库。普通用户路径是：
 
 ```text
-Prompt surfaces       = CLAUDE.md / AGENTS.md / Cursor rules / plugin skills
-npx anyharness        = 扫描器 + 安装器 + 检查器 + 门禁执行器
-Agent hooks           = AI 工作过程中阻断不安全 tool use
-Git hooks             = commit 前阻断不安全改动
-CI gates              = 即使本地 hook 被绕过，也在 PR/merge 前兜底
-Gate artifacts        = 高风险改动的机器可读证据
+安装插件 → 运行 AnyHarness → 扫描项目 → 确认领域细节 → 生成项目 harness
 ```
 
-AnyHarness 有三种使用层级：
-
-| 层级 | 主命令 | 做什么 | 适合场景 |
-|---|---|---|---|
-| Lite | `npx anyharness prompt --target core` | 只打印规则，不写文件 | 单次 AI 会话试用 |
-| Project | `npx anyharness adopt` | 安全写入原生 prompt surface | 老项目、个人项目 |
-| Harness | `npx anyharness new` 或 `npx anyharness adopt --enforce` | prompts + hooks + CI + gates | 新项目、团队、生产系统 |
-
----
-
-## 注入给 LLM 的四条核心规则
-
-AnyHarness 安装的所有 prompt surface 都会注入这四条规则：
-
-1. **先判断风险等级**  
-   每个任务在实现前必须判断为 L0、L1、L2 或 L3。
-
-2. **保持修改精准**  
-   每一行改动都必须能追溯到用户需求，不做顺手重构。
-
-3. **用证据说话**  
-   不要声称“完成了”或“测试通过”，除非有命令、测试、文件变更、gate artifact 或明确的未测风险说明。
-
-4. **阻断不安全工作**  
-   secrets、migration、认证、授权、支付、生产数据、CI/CD、部署配置和 agent 治理文件必须走门禁和批准。
-
----
-
-## 新项目：一个命令
-
-你启动新 repo，并希望 AnyHarness 从第一天就生效：
-
-```bash
-npx anyharness new
-```
-
-它等价于完整 harness 初始化：
+对外入口刻意保持简单：
 
 ```text
-profile: harness
-mode: enforcing
-target: both
-写入 prompts: CLAUDE.md + AGENTS.md
-安装 Git hooks: 是
-写入 CI template: 是
-创建 .anyharness/config.json: 是
-保存扫描 baseline: 是
+Use AnyHarness for this repository.
 ```
 
-会创建或生成草案：
+在 Claude Code 插件里，可能显示为命名空间 skill：
 
 ```text
-CLAUDE.md
-AGENTS.md
-.anyharness/config.json
-.anyharness/baselines/project-scan.json
-.anyharness/gates/
-.anyharness/approvals/
+/anyharness:anyharness
+```
+
+在 Codex 里可以直接说：
+
+```text
+Use AnyHarness to adopt this repository.
+```
+
+## v3 解决什么问题
+
+真正的问题不是“AI 需要一个通用 review checklist”。更难的问题是不同项目的领域风险完全不同：
+
+- 低延迟 C++ 行情 / 交易服务端
+- Electron 桌面客户端
+- Java 电商后端
+- AI agent 平台
+- 支付系统
+- 内部管理后台
+
+通用规则有帮助，但不够。AnyHarness v3 会基于仓库证据和用户确认，生成 **Project Harness Profile**。
+
+## 核心模型
+
+```text
+Skills 负责推理。
+Scripts 负责辅助。
+可选 hooks 负责执行。
+```
+
+AnyHarness 把 LLM 用在它擅长的地方：
+
+- 阅读项目上下文
+- 发现领域信号
+- 向用户提问确认
+- 生成项目专属规则
+- 创建专家 review 角色
+- 设计门禁和测试 oracle
+- 生成跨模型 review packet
+
+可选 skill scripts 负责确定性的辅助任务：
+
+- 扫描仓库
+- 收集 diff
+- 写入原生 prompt 文件
+- 写入并校验 profile
+- 生成 review packet
+- 可选安装本地 hooks
+
+普通用户不需要全局 CLI。
+
+## AnyHarness 会生成什么
+
+默认情况下，AnyHarness 只在确认后写入原生 AI prompt 面：
+
+```text
+CLAUDE.md      # Claude Code 项目指令
+AGENTS.md      # Codex / 通用 agent 指令
+.cursor/rules/anyharness.mdc  # 可选 Cursor 规则
+```
+
+如果启用 Project Harness 模式，会生成：
+
+```text
+.anyharness/
+  profile.json       # 机器可读项目 harness profile
+  profile.md         # 人类可读项目 harness profile
+  gates/             # 门禁产物
+  packets/           # 跨模型 review packet
+  evidence/          # 测试 / review 证据
+```
+
+如果启用硬门禁，会生成项目本地文件：
+
+```text
+.anyharness/scripts/check.mjs
 .githooks/pre-commit
 .githooks/commit-msg
-.githooks/pre-push
 .github/workflows/anyharness.yml
 ```
 
-如果目标文件已经存在，AnyHarness 不会覆盖，而是写入：
+这些都只会在用户明确确认后生成。
+
+## Claude Code 快速开始
+
+1. 把这个仓库添加为 Claude plugin marketplace。
+2. 安装 `anyharness` 插件。
+3. 运行：
 
 ```text
-.anyharness/drafts/
+/anyharness:anyharness adopt this repository safely
 ```
 
-### 新项目示例
-
-```bash
-mkdir my-app
-cd my-app
-git init
-npm init -y
-npx anyharness new
-```
-
-然后对 AI coding agent 说：
+新项目：
 
 ```text
-Read CLAUDE.md and AGENTS.md. Use AnyHarness rules to plan a password reset feature. Classify risk first, keep the change surgical, and include tests or untested risks.
+/anyharness:anyharness initialize this new project
 ```
 
-提交前：
-
-```bash
-npx anyharness check --staged
-git commit -m "feat(auth): add password reset request [risk:L2]" \
-  -m "Risk-Level: L2" \
-  -m "Gate-Review: .anyharness/gates/password-reset.json" \
-  -m "Tests: npm test" \
-  -m "Human-Approval: required" \
-  -m "Rollback: docs/release/password-reset.md"
-```
-
----
-
-## 老项目：一个安全命令
-
-已有代码、文档、AI 指令、CI 或团队约定的项目，不要一上来强制接管。用：
-
-```bash
-npx anyharness adopt
-```
-
-它默认很保守：
+review 当前改动：
 
 ```text
-profile: project
-mode: advisory
-target: detect
-写入 prompts: 原生文件或 draft
-安装 Git hooks: 否
-写入 CI template: 否
-覆盖已有文件: 永不覆盖
+/anyharness:anyharness review the current staged diff
 ```
 
-它会扫描项目并创建：
+生成跨模型 review packet：
 
 ```text
-.anyharness/config.json
-.anyharness/baselines/project-scan.json
-.anyharness/drafts/        # 当 CLAUDE.md 或 AGENTS.md 已存在时
+/anyharness:anyharness create a security review packet for the staged diff
 ```
 
-如果项目已有 `CLAUDE.md` 或 `AGENTS.md`，AnyHarness 会生成追加草案：
+## Codex 快速开始
+
+1. 把这个仓库添加为 Codex plugin marketplace。
+2. 安装 `anyharness` 插件。
+3. 直接说：
 
 ```text
-.anyharness/drafts/CLAUDE.append.md
-.anyharness/drafts/AGENTS.append.md
+Use AnyHarness to adopt this repository safely.
 ```
 
-你人工 review 后再合并。
-
-### 老项目示例
-
-```bash
-cd existing-repo
-npx anyharness adopt
-```
-
-检查结果：
-
-```bash
-cat .anyharness/baselines/project-scan.json
-ls .anyharness/drafts
-```
-
-然后对 AI 说：
+继续使用：
 
 ```text
-Read the AnyHarness draft under .anyharness/drafts and propose the smallest safe merge into our existing CLAUDE.md or AGENTS.md. Do not overwrite existing instructions.
+Use AnyHarness to generate project-specific expert review roles.
+Use AnyHarness to review this diff against the project harness.
+Use AnyHarness to create a cross-model review packet.
 ```
 
-当团队准备好启用强制门禁：
+## 新项目流程
 
-```bash
-npx anyharness adopt --enforce
-```
-
-`adopt --enforce` 是老项目的完整 harness 模式：会写 CI、安装 Git hooks，但仍然不会覆盖已有 prompt 文件。
-
----
-
-## 之前两个命令现在怎么用？
-
-v2.2 之前，完整 harness README 中是两个命令：
-
-```bash
-npx anyharness init --profile harness --target both --mode enforcing --install-hooks
-npx anyharness ci-template --write
-```
-
-v2.2 中，新项目直接用：
-
-```bash
-npx anyharness new
-```
-
-老项目强制接入用：
-
-```bash
-npx anyharness adopt --enforce
-```
-
-底层命令仍然存在，但 README 主路径已经改成一条命令。
-
----
-
-## 快速命令参考
-
-### 推荐命令
-
-```bash
-npx anyharness new                 # 新项目，完整 harness
-npx anyharness adopt               # 老项目，安全 advisory 接入
-npx anyharness adopt --enforce     # 老项目，review 后启用完整 harness
-```
-
-### Prompt-only 命令
-
-```bash
-npx anyharness prompt --target core
-npx anyharness prompt --target claude --write
-npx anyharness prompt --target codex --write
-npx anyharness prompt --target cursor --write
-npx anyharness prompt --target both --write
-```
-
-### 检查命令
-
-```bash
-npx anyharness scan --json
-npx anyharness check --staged
-npx anyharness check --push
-npx anyharness check --ci
-npx anyharness commit-msg .git/COMMIT_EDITMSG
-npx anyharness doctor
-```
-
-### 高级初始化命令
-
-```bash
-npx anyharness init --profile project --target detect --mode advisory
-npx anyharness init --profile harness --target both --mode enforcing --install-hooks
-npx anyharness ci-template --write
-npx anyharness install-hooks
-npx anyharness uninstall-hooks
-```
-
----
-
-## Claude Code 使用
-
-开发时可以从本地 marketplace 安装：
+输入：
 
 ```text
-/plugin marketplace add ./path/to/AnyHarness-v2.2
-/plugin install anyharness@anyharness
+Use AnyHarness to initialize this new project.
 ```
 
-可调用：
+AnyHarness 会：
+
+1. 只读扫描项目
+2. 检测 `CLAUDE.md`、`AGENTS.md`、`.cursor/rules` 等 AI workflow 文件
+3. 检测 Java、C++、Rust、TypeScript、Electron、React、Spring 等技术栈信号
+4. 从代码、文档、路由、schema、测试和命名中发现领域假设
+5. 向用户提问确认
+6. 生成原生 prompt 面
+7. 生成项目专属 harness profile
+8. 提供可选本地执行门禁
+
+## 老项目流程
+
+输入：
 
 ```text
-/anyharness:harness-core
-/anyharness:init-project
-/anyharness:risk-classify
-/anyharness:new-feature
-/anyharness:design-review
-/anyharness:implementation-plan
-/anyharness:code-review
-/anyharness:test-plan
-/anyharness:security-review
-/anyharness:release-check
+Use AnyHarness to adopt this existing repository safely.
 ```
 
-大多数 repo 仍建议先用 CLI：
+老项目默认行为：
 
-```bash
-npx anyharness new       # 新 repo
-npx anyharness adopt     # 老 repo
-```
+- 先只读扫描
+- 不覆盖文件
+- 如果 `CLAUDE.md` 或 `AGENTS.md` 已存在，则生成 draft
+- 生成带证据的领域假设
+- 写入前必须用户确认
+- 不主动安装 hooks
 
-CLI 负责安装项目本地 prompt surfaces 和执行门禁；plugin 提供 Claude 中的交互式工作流。
+## 领域发现流程
 
----
-
-## Codex 使用
-
-开发时可以从本地 marketplace 安装：
-
-```text
-codex plugin marketplace add ./path/to/AnyHarness-v2.2
-```
-
-然后对 Codex 说：
-
-```text
-Use AnyHarness to initialize this repository.
-Use AnyHarness to review this diff.
-Use AnyHarness to prepare a release check.
-```
-
-写入 Codex 项目指令：
-
-```bash
-npx anyharness prompt --target codex --write
-```
-
-这会写入 `AGENTS.md`，如果已有则生成 `.anyharness/drafts/AGENTS.append.md`。
-
----
-
-## Cursor 使用
-
-Cursor 默认使用轻量接入：
-
-```bash
-npx anyharness prompt --target cursor --write
-```
-
-会写入：
-
-```text
-.cursor/rules/anyharness.mdc
-```
-
-Cursor rule 只注入行为规范；完整强制门禁仍由 CLI、Git hooks、CI 完成：
-
-```bash
-npx anyharness new
-# 或
-npx anyharness adopt --enforce
-```
-
----
-
-## 风险等级
-
-| 等级 | 含义 | 示例 | 门禁 |
-|---|---|---|---|
-| L0 | 低风险 | 文档、文案、小样式 | 自检 |
-| L1 | 普通功能 | CRUD、普通 UI/API | 需求 + 测试计划 |
-| L2 | 核心/敏感 | auth、授权、文件上传、数据库 schema、外部 API | 设计 + 安全 + 测试 + 批准 |
-| L3 | 关键/不可逆 | 生产数据、migration、公共 API 破坏、架构变化 | 完整设计 + 迁移 + 回滚 + CI + 明确批准 |
-
-只要涉及 secrets、migration、认证、支付、CI/CD、部署、公共 API 或生产数据，就会升级风险。
-
----
-
-## Commit message 门禁
-
-AnyHarness 要求 commit message 带风险标签：
-
-```text
-feat(auth): rotate refresh tokens [risk:L2]
-```
-
-L2/L3 需要 trailers：
-
-```text
-Risk-Level: L2
-Gate-Review: .anyharness/gates/refresh-token.json
-Security-Review: .anyharness/gates/refresh-token-security.json
-Tests: npm test
-Human-Approval: required
-Rollback: docs/release/refresh-token.md
-```
-
-enforcing 模式下，`commit-msg` hook 会阻断缺失风险元数据的提交。
-
----
-
-## Gate artifacts
-
-高风险改动需要机器可读证据：
-
-```text
-.anyharness/gates/<change-id>.json
-.anyharness/approvals/<change-id>.json
-```
+AnyHarness 不提供权威静态领域包。它会先提出领域假设。
 
 示例：
 
-```bash
-npx anyharness gate create --task "rotate refresh tokens" --risk L2 --gates design,security,test,release
-npx anyharness gate approve <gate-id> --notes "Approved after design and security review."
+```text
+Domain hypotheses:
+- ecommerce/payment: confidence medium
+- inventory consistency: confidence medium
+
+Evidence:
+- src/payment/PaymentCallbackController.java
+- src/order/OrderService.java
+- migrations/create_inventory_reservations.sql
+- docs/checkout.md
+
+Unknowns:
+- payment callback 是否会重复
+- inventory 是预留还是直接扣减
+- 订单状态机在哪里定义
 ```
 
-这些 artifact 能让 hooks 和 CI 验证 AI 不是只“声称安全”。
+然后询问：
 
----
+```text
+1. 支付回调是否可能重复？
+2. 订单最终价格是否在创建时冻结？
+3. 库存是在 checkout 时预留，还是支付成功后扣减？
+4. 支付成功后是否立即履约？
+```
 
-## Docs drift 门禁
+确认后才合成项目规则。
 
-AnyHarness 检查代码变更是否需要同步文档。
+## 专家 review 角色
 
-| 改动区域 | 需要的证据 |
-|---|---|
-| API routes / OpenAPI / GraphQL / proto | API 文档或 docs-impact 说明 |
-| database schema / migrations | migration plan、rollback plan、数据文档 |
-| auth / security | security review artifact |
-| `.env.example` / deploy config | 部署文档 |
-| `CLAUDE.md` / `AGENTS.md` / `.claude` / `.codex` | governance 变更说明 |
+AnyHarness 会根据项目 harness profile 生成项目专属专家角色，例如：
 
-如果无需更新文档，要在 gate artifact 中说明理由，而不是默默跳过。
+```text
+Payment Idempotency Reviewer
+Inventory Consistency Reviewer
+Electron IPC Boundary Reviewer
+Low-Latency C++ Reviewer
+Order State Machine Reviewer
+Architecture Trade-off Reviewer
+Performance and Memory Reviewer
+Release Readiness Reviewer
+```
 
----
+这些角色不是标签，而是包含：
+
+- 适用范围
+- 所需上下文
+- 项目不变量
+- 阻断条件
+- 证据要求
+- 输出 schema
+
+## Review packet
+
+Review packet 用来解决“换模型 review 没上下文”的问题。
+
+输入：
+
+```text
+Use AnyHarness to create a security review packet for the staged diff.
+```
+
+生成：
+
+```text
+.anyharness/packets/<id>/
+  PROMPT.md
+  PROJECT_PROFILE.md
+  DIFF.patch
+  CHANGED_FILES.txt
+  RELEVANT_FILES.md
+  GATE_REQUIREMENTS.md
+  DOMAIN_INVARIANTS.md
+  UNKNOWN.md
+```
+
+你可以把这个 packet 给另一个模型，让它只执行某个专家角色。
+
+## 模式
+
+| 模式 | 内容 | 适合 |
+|---|---|---|
+| Skill-only | LLM 交互、领域发现、prompt 面、review packet | 个人开发、探索 |
+| Project Harness | 增加 `.anyharness/profile.json` 和 gates | 认真个人项目、小团队 |
+| Enforcement | 增加本地 scripts、Git hooks、CI workflow | 团队和生产仓库 |
 
 ## 安全模型
 
-AnyHarness 有意把 prompt instruction 和 enforcement 分开：
+1. 安装插件不会修改仓库。
+2. 先扫描，再写入。
+3. 已有 prompt 文件不覆盖，只生成 draft。
+4. 领域示例不是权威规则。
+5. 写入 profile 或 enforcement 文件前必须确认。
+6. 生成的本地 scripts 必须可审查。
+7. 硬门禁是可选的。
 
-```text
-LLM rules can guide.
-Hooks and CI can block.
-Gate artifacts can prove.
-Humans still approve irreversible work.
-```
+## 维护者验证
 
-本地 Git hooks 是开发体验层；CI 才是最终兜底，因为本地 hooks 可以被绕过。
-
----
-
-## 开发
+本仓库包含维护者验证脚本：
 
 ```bash
-npm run validate
-npm test
 npm run check
 ```
 
-验证脚本会检查 plugin manifests、skills、hooks、marketplace 文件、prompt surfaces、package metadata 和核心项目结构。
+这不是普通用户安装路径，只用于验证插件包结构。

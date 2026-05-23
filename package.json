@@ -1,63 +1,14 @@
 {
-  "name": "anyharness",
-  "version": "2.2.0",
-  "description": "AnyHarness is an npx-first AI coding harness: one-command new/adopt onboarding, native Claude/Codex/Cursor prompt injection, hooks, Git gates, CI checks, gate artifacts, approvals, and docs drift.",
+  "name": "anyharness-v3-plugin",
+  "version": "3.0.0",
+  "private": true,
+  "description": "AnyHarness v3: skill-first adaptive engineering harness for AI-assisted development.",
   "type": "module",
-  "bin": {
-    "anyharness": "./bin/anyharness.mjs"
-  },
   "scripts": {
     "validate": "node scripts/validate.mjs",
-    "test": "node scripts/validate.mjs && node test/run.mjs",
-    "check": "npm run validate && npm test",
-    "demo:doctor": "node bin/anyharness.mjs doctor",
-    "demo:scan": "node bin/anyharness.mjs scan --json"
+    "test": "node test/run.mjs",
+    "check": "npm run validate && npm test"
   },
-  "keywords": [
-    "agent",
-    "ai",
-    "ci",
-    "claude-code",
-    "code-review",
-    "codex",
-    "cursor",
-    "docs-drift",
-    "git-hooks",
-    "governance",
-    "guardrails",
-    "hooks",
-    "red-zone",
-    "security",
-    "skills",
-    "testing"
-  ],
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
-  "files": [
-    "AGENTS.md",
-    "CLAUDE.md",
-    "EXAMPLES.md",
-    "EXAMPLES.zh-CN.md",
-    "LICENSE",
-    "README.md",
-    "README.zh-CN.md",
-    "adapters",
-    "bin",
-    "docs",
-    "plugins",
-    "src",
-    "templates",
-    ".claude-plugin",
-    ".agents",
-    ".cursor",
-    "prompts"
-  ],
-  "displayName": "AnyHarness",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/your-org/anyharness.git"
-  },
-  "homepage": "https://github.com/your-org/anyharness"
+  "keywords": ["ai-coding", "agent-skills", "claude-plugin", "codex-plugin", "engineering-harness", "code-review", "domain-discovery"],
+  "license": "MIT"
 }

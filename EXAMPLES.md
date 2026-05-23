@@ -1,150 +1,86 @@
-# Examples
+# AnyHarness v3 Examples
 
-These examples show the difference between ordinary vibe coding and guardrail-driven AI coding.
+## 1. Existing Java e-commerce project
 
-
-## 0. Prompt injection vs npx execution
-
-User asks:
+User:
 
 ```text
-How do I make the AI follow AnyHarness rules?
+Use AnyHarness to adopt this existing repository safely.
 ```
 
-Wrong mental model:
+AnyHarness scans and reports:
 
 ```text
-Just run npx anyharness and assume the model now knows the rules.
+Detected stack:
+- Java / Spring Boot
+- REST API
+- SQL migrations
+- Messaging signals
+
+Domain hypotheses:
+- ecommerce/payment: medium confidence
+- inventory consistency: medium confidence
+
+Evidence:
+- OrderService.java
+- PaymentCallbackController.java
+- InventoryReservationRepository.java
+- docs/checkout.md
 ```
 
-AnyHarness mental model:
+Then it asks focused questions before generating rules.
+
+## 2. Electron desktop client
+
+AnyHarness should not apply generic web rules only. It should discover:
 
 ```text
-npx anyharness prompt --target core
+main process
+renderer process
+preload bridge
+ipcMain / ipcRenderer
+local file access
+auto updater
 ```
 
-Inject the printed prompt into the LLM, or write project-local prompt surfaces:
-
-```bash
-npx anyharness prompt --target claude --write
-npx anyharness prompt --target codex --write
-npx anyharness adopt
-```
-
-Then use `npx anyharness check --staged` or CI to verify the result.
-
-## 1. Hidden Risk: user export
-
-User asks:
+Then it creates expert roles:
 
 ```text
-Add a CSV export for users.
+Electron Security Reviewer
+IPC Boundary Reviewer
+Local Storage and Secrets Reviewer
+Desktop Release Reviewer
 ```
 
-Bad behavior:
+## 3. C++ trading service
+
+AnyHarness should discover domain signals:
 
 ```text
-The agent exports every user field, including email and internal notes, without asking about permissions, audit logs, rate limits, or privacy.
+market_data
+order_book
+execution_report
+venue
+risk_check
+sequence number
+replay
 ```
 
-AnyHarness behavior:
+Then it should ask:
 
 ```text
-Risk Level: L2
-Reason: user data export, authorization, privacy, potential abuse.
-Required gates: requirement, design, security, test, release.
-Questions: Which fields? Who can export? Is this audited? Is there a data retention or compliance requirement?
+Is there a latency SLO?
+Is the hot path allocation-free?
+How are duplicate or out-of-order messages handled?
+Where is the order state machine defined?
 ```
 
-## 2. Over-refactor: small bug fix becomes architecture change
+## 4. Cross-model review packet
 
-User asks:
+Instead of asking another model to review without context, ask:
 
 ```text
-Fix the crash when email is empty.
+Use AnyHarness to create a performance review packet for the staged diff.
 ```
 
-Bad behavior:
-
-```text
-The agent rewrites the entire validation layer, changes public types, and updates unrelated form components.
-```
-
-AnyHarness behavior:
-
-```text
-Risk Level: L1
-Scope: only email empty handling and regression test.
-Files not to touch: unrelated validators, unrelated form components, public API types.
-Evidence: add one failing regression test, implement minimal fix, run the relevant test command.
-```
-
-## 3. Docs drift: API changed but documentation did not
-
-Changed files:
-
-```text
-app/api/users/route.ts
-openapi.yaml
-```
-
-Bad behavior:
-
-```text
-Commit succeeds without updating API docs or explaining docs impact.
-```
-
-AnyHarness behavior:
-
-```text
-pre-commit blocks with Docs drift detected.
-Fix by updating docs/api/*, CHANGELOG.md, or adding a gate artifact with Docs Impact: none and justification.
-```
-
-## 4. Unsafe commit: auth change without risk metadata
-
-Bad commit:
-
-```text
-feat: update auth
-```
-
-AnyHarness behavior:
-
-```text
-commit-msg blocks.
-Required format: feat(auth): rotate refresh tokens [risk:L2]
-Required trailers for L2/L3: Risk-Level, Gate-Review, Tests, Human-Approval, Rollback.
-```
-
-## 5. Red Zone file change
-
-Changed file:
-
-```text
-src/auth/session.ts
-```
-
-AnyHarness behavior:
-
-```text
-Agent hook blocks direct edit unless a security/design/test gate is created and human approval is recorded.
-Git hook and CI also check the same condition.
-```
-
-## 6. L0 happy path
-
-User asks:
-
-```text
-Change the button label from Submit to Save.
-```
-
-AnyHarness behavior:
-
-```text
-Risk Level: L0
-Scope: one UI text change.
-Tests: manual visual check or existing snapshot if available.
-No gate artifact required.
-```
+Give the generated packet to another model and ask it to perform only the selected expert role.

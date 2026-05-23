@@ -1,7 +1,7 @@
 {
   "name": "anyharness",
-  "version": "2.2.0",
-  "description": "Prompt injection and enforcement harness for AI coding agents: skills, hooks, project rules, Git gates, and CI checks.",
+  "version": "3.0.0",
+  "description": "Skill-first adaptive engineering harness for Codex. Discover project domains, synthesize harness profiles, create expert review roles, and generate review packets.",
   "author": {
     "name": "AnyHarness Contributors"
   },
@@ -10,20 +10,17 @@
   "license": "MIT",
   "keywords": [
     "ai-coding",
-    "guardrails",
     "skills",
-    "hooks",
+    "engineering-harness",
     "code-review",
-    "testing",
-    "security",
-    "ci"
+    "domain-discovery",
+    "project-rules"
   ],
   "skills": "./skills/",
-  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "AnyHarness",
-    "shortDescription": "Prompt injection and enforcement harness for AI coding.",
-    "longDescription": "Use AnyHarness to inject LLM-facing prompts into Claude, Codex, AGENTS.md, CLAUDE.md, Cursor rules, and to enforce gates with hooks, Git hooks, CI, gate artifacts, approvals, and docs drift checks.",
+    "shortDescription": "Skill-first adaptive engineering harness.",
+    "longDescription": "Use AnyHarness to learn the current repository, ask domain-specific questions, synthesize a project harness profile, generate expert review roles, and create review packets for cross-model review.",
     "developerName": "AnyHarness Contributors",
     "category": "Developer Tools",
     "capabilities": [
@@ -31,10 +28,10 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Inject AnyHarness core rules into this repository.",
-      "Use AnyHarness core rules for this change.",
-      "Use AnyHarness to initialize this repository and recommend the right profile.",
-      "Use AnyHarness to review this diff before commit."
+      "Use AnyHarness to adopt this repository safely.",
+      "Use AnyHarness to initialize this new project.",
+      "Use AnyHarness to review the current staged diff.",
+      "Use AnyHarness to create a cross-model review packet."
     ]
   }
 }

@@ -1,36 +1,13 @@
-# AnyHarness for Claude Code
+# AnyHarness Plugin
 
-AnyHarness adds native Claude Code prompt rules, skills, and optional hooks for safer AI-assisted coding.
+Use the AnyHarness skill to learn a repository and generate a project-specific engineering harness.
 
-## Native prompt surface
-
-Claude Code uses `CLAUDE.md` or `.claude/CLAUDE.md`. AnyHarness does not require a separate `ANYHARNESS.md` file.
-
-Write or draft Claude instructions:
-
-```bash
-npx anyharness prompt --target claude --write
-```
-
-## Skills
+Main usage:
 
 ```text
-/anyharness:harness-core
-/anyharness:init-project
-/anyharness:risk-classify
-/anyharness:new-feature
-/anyharness:design-review
-/anyharness:implementation-plan
-/anyharness:code-review
-/anyharness:test-plan
-/anyharness:security-review
-/anyharness:release-check
+Use AnyHarness to adopt this repository safely.
+Use AnyHarness to initialize this new project.
+Use AnyHarness to review the current staged diff.
 ```
 
-## Closed-loop mode
-
-```bash
-npx anyharness new --target claude
-```
-
-This enables agent hooks, Git hooks, CI checks, gate artifacts, approvals, and docs drift gates.
+Installation does not modify a repository. Writes happen only after user confirmation.

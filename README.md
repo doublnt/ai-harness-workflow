@@ -1,452 +1,326 @@
-# AnyHarness 2.2
+# AnyHarness v3
 
-**AnyHarness** is an AI coding harness. It does two things:
+**Install the plugin. Run AnyHarness. Let it learn your project and generate a project-specific engineering harness for AI-assisted development.**
 
-1. **Injects rules into the LLM** through the native files your tools already read: `CLAUDE.md`, `AGENTS.md`, Cursor rules, and Claude/Codex skills.
-2. **Enforces those rules** with `npx anyharness`, agent hooks, Git hooks, CI gates, gate artifacts, approval records, commit-message checks, and docs-drift checks.
-
-The v2.2 usage model is intentionally simple:
-
-```bash
-# New project: one command
-npx anyharness new
-
-# Existing project: one safe command
-npx anyharness adopt
-```
-
-Advanced commands still exist, but most users should start with `new` or `adopt`.
-
----
-
-## Why `npx anyharness` is the key entry point
-
-The prompt is what the LLM reads. The harness is what proves the project actually followed the prompt.
+AnyHarness v3 is a **skill-first adaptive harness**. It is not an `npx`-first CLI and it is not a static checklist library. The normal user path is:
 
 ```text
-Prompt surfaces       = CLAUDE.md / AGENTS.md / Cursor rules / plugin skills
-npx anyharness        = scanner + installer + checker + gate runner
-Agent hooks           = block unsafe AI tool use while the agent works
-Git hooks             = block unsafe commits before they land
-CI gates              = block unsafe PRs even if local hooks are bypassed
-Gate artifacts        = machine-readable evidence for high-risk changes
+Install plugin → run AnyHarness → scan repo → confirm domain details → generate project harness
 ```
 
-You can use AnyHarness in three levels:
-
-| Level | Main command | What it does | Best for |
-|---|---|---|---|
-| Lite | `npx anyharness prompt --target core` | Prints rules only; writes nothing | Trying the idea in one AI session |
-| Project | `npx anyharness adopt` | Adds native prompt surfaces safely | Existing repos, solo projects |
-| Harness | `npx anyharness new` or `npx anyharness adopt --enforce` | Adds prompts + hooks + CI + gates | New repos, teams, production systems |
-
----
-
-## The four rules injected into the LLM
-
-Every prompt surface installed by AnyHarness carries these rules:
-
-1. **Classify Risk First**  
-   Every task must be classified as L0, L1, L2, or L3 before implementation.
-
-2. **Keep Changes Surgical**  
-   Every changed line must trace back to the user's request. No opportunistic refactors.
-
-3. **Require Evidence**  
-   Do not claim success unless there is evidence: commands run, tests, files changed, gate artifacts, or explicit untested risks.
-
-4. **Block Unsafe Work**  
-   Secrets, migrations, authentication, authorization, payments, production data, CI/CD, deploy configs, and agent governance files require gates and approval.
-
----
-
-## New project: one command
-
-Use this when you are starting a repo and want AnyHarness active from day one.
-
-```bash
-npx anyharness new
-```
-
-This expands to a full harness setup:
+The public surface is intentionally small:
 
 ```text
-profile: harness
-mode: enforcing
-target: both
-write prompts: CLAUDE.md + AGENTS.md
-install Git hooks: yes
-write CI template: yes
-create .anyharness/config.json: yes
-save scan baseline: yes
+Use AnyHarness for this repository.
 ```
 
-It creates or drafts:
+In Claude Code, the installed plugin may expose the namespaced skill as:
 
 ```text
-CLAUDE.md
-AGENTS.md
-.anyharness/config.json
-.anyharness/baselines/project-scan.json
-.anyharness/gates/
-.anyharness/approvals/
+/anyharness:anyharness
+```
+
+In Codex, you can use natural language:
+
+```text
+Use AnyHarness to adopt this repository.
+```
+
+## Why v3 exists
+
+The original problem is not only that AI-generated code needs a generic review checklist. The harder problem is that every project has different domain risks:
+
+- a low-latency C++ market-data or trading service
+- an Electron desktop client
+- a Java e-commerce backend
+- an AI agent platform
+- a payment system
+- an internal admin tool
+
+Generic guardrails are useful, but they are not enough. AnyHarness v3 derives a **Project Harness Profile** from repository evidence and user confirmation.
+
+## Core idea
+
+```text
+Skills reason.
+Scripts assist.
+Optional hooks enforce.
+```
+
+AnyHarness uses the LLM where it is strongest:
+
+- reading project context
+- discovering domain signals
+- asking focused questions
+- synthesizing project-specific rules
+- creating expert review roles
+- designing gates and test oracles
+- generating cross-model review packets
+
+Optional skill scripts handle deterministic support tasks:
+
+- repository scanning
+- diff collection
+- native prompt file writing
+- profile writing and validation
+- review packet generation
+- optional local hook installation
+
+No global CLI is required for normal usage.
+
+## What AnyHarness generates
+
+By default, AnyHarness writes only native AI prompt surfaces after confirmation:
+
+```text
+CLAUDE.md      # Claude Code project instructions
+AGENTS.md      # Codex and agent instructions
+.cursor/rules/anyharness.mdc  # optional Cursor rule
+```
+
+If you enable Project Harness mode, it also writes:
+
+```text
+.anyharness/
+  profile.json       # machine-readable project harness profile
+  profile.md         # human-readable project harness profile
+  gates/             # gate artifacts
+  packets/           # cross-model review packets
+  evidence/          # test/review evidence, if generated
+```
+
+If you enable hard enforcement, it can generate repo-local files:
+
+```text
+.anyharness/scripts/check.mjs
 .githooks/pre-commit
 .githooks/commit-msg
-.githooks/pre-push
 .github/workflows/anyharness.yml
 ```
 
-If a file already exists, AnyHarness does not overwrite it. It writes a draft under:
+These are generated only after explicit confirmation.
+
+## Quick start: Claude Code
+
+1. Add this repository as a Claude plugin marketplace.
+2. Install the `anyharness` plugin.
+3. Run:
 
 ```text
-.anyharness/drafts/
+/anyharness:anyharness adopt this repository safely
 ```
 
-### New project example
-
-```bash
-mkdir my-app
-cd my-app
-git init
-npm init -y
-npx anyharness new
-```
-
-Then ask your AI coding agent:
+For a new project:
 
 ```text
-Read CLAUDE.md and AGENTS.md. Use AnyHarness rules to plan a password reset feature. Classify risk first, keep the change surgical, and include tests or untested risks.
+/anyharness:anyharness initialize this new project
 ```
 
-Before committing:
-
-```bash
-npx anyharness check --staged
-git commit -m "feat(auth): add password reset request [risk:L2]" \
-  -m "Risk-Level: L2" \
-  -m "Gate-Review: .anyharness/gates/password-reset.json" \
-  -m "Tests: npm test" \
-  -m "Human-Approval: required" \
-  -m "Rollback: docs/release/password-reset.md"
-```
-
----
-
-## Existing project: one safe command
-
-Use this when the repo already has code, docs, AI instructions, CI, or team conventions.
-
-```bash
-npx anyharness adopt
-```
-
-This is deliberately conservative:
+For review:
 
 ```text
-profile: project
-mode: advisory
-target: detect
-write prompts: native files or drafts
-install Git hooks: no
-write CI template: no
-overwrite existing files: never
+/anyharness:anyharness review the current staged diff
 ```
 
-It scans the repo and creates:
+For cross-model review:
 
 ```text
-.anyharness/config.json
-.anyharness/baselines/project-scan.json
-.anyharness/drafts/        # when CLAUDE.md or AGENTS.md already exists
+/anyharness:anyharness create a security review packet for the staged diff
 ```
 
-If your repo already has `CLAUDE.md` or `AGENTS.md`, AnyHarness writes append drafts instead of overwriting:
+## Quick start: Codex
+
+1. Add this repository as a Codex plugin marketplace.
+2. Install the `anyharness` plugin.
+3. Use natural language:
 
 ```text
-.anyharness/drafts/CLAUDE.append.md
-.anyharness/drafts/AGENTS.append.md
+Use AnyHarness to adopt this repository safely.
 ```
 
-You review and merge those manually.
-
-### Existing project example
-
-```bash
-cd existing-repo
-npx anyharness adopt
-```
-
-Then inspect:
-
-```bash
-cat .anyharness/baselines/project-scan.json
-ls .anyharness/drafts
-```
-
-Ask your AI agent:
+Then continue:
 
 ```text
-Read the AnyHarness draft under .anyharness/drafts and propose the smallest safe merge into our existing CLAUDE.md or AGENTS.md. Do not overwrite existing instructions.
+Use AnyHarness to generate project-specific expert review roles.
+Use AnyHarness to review this diff against the project harness.
+Use AnyHarness to create a cross-model review packet.
 ```
 
-When the team is ready to enforce the rules:
+## New project workflow
 
-```bash
-npx anyharness adopt --enforce
-```
-
-`adopt --enforce` is the old-project equivalent of the full harness setup. It writes CI and installs Git hooks, but still refuses to overwrite existing prompt files.
-
----
-
-## What happened to the old two-command setup?
-
-Before v2.2, full harness setup was shown as two commands:
-
-```bash
-npx anyharness init --profile harness --target both --mode enforcing --install-hooks
-npx anyharness ci-template --write
-```
-
-In v2.2, this is replaced by:
-
-```bash
-npx anyharness new
-```
-
-For existing projects, use:
-
-```bash
-npx anyharness adopt --enforce
-```
-
-The lower-level commands still exist for advanced use, but README examples now use the one-command presets.
-
----
-
-## Quick command reference
-
-### Recommended commands
-
-```bash
-npx anyharness new                 # New project, full harness
-npx anyharness adopt               # Existing project, safe advisory adoption
-npx anyharness adopt --enforce     # Existing project, full harness after review
-```
-
-### Prompt-only commands
-
-```bash
-npx anyharness prompt --target core
-npx anyharness prompt --target claude --write
-npx anyharness prompt --target codex --write
-npx anyharness prompt --target cursor --write
-npx anyharness prompt --target both --write
-```
-
-### Checker commands
-
-```bash
-npx anyharness scan --json
-npx anyharness check --staged
-npx anyharness check --push
-npx anyharness check --ci
-npx anyharness commit-msg .git/COMMIT_EDITMSG
-npx anyharness doctor
-```
-
-### Advanced setup commands
-
-```bash
-npx anyharness init --profile project --target detect --mode advisory
-npx anyharness init --profile harness --target both --mode enforcing --install-hooks
-npx anyharness ci-template --write
-npx anyharness install-hooks
-npx anyharness uninstall-hooks
-```
-
----
-
-## Claude Code usage
-
-Install the plugin from a local marketplace during development:
+Ask:
 
 ```text
-/plugin marketplace add ./path/to/AnyHarness-v2.2
-/plugin install anyharness@anyharness
+Use AnyHarness to initialize this new project.
 ```
 
-Then use:
+AnyHarness will:
+
+1. perform a read-only scan
+2. detect AI workflow files such as `CLAUDE.md`, `AGENTS.md`, `.cursor/rules`
+3. detect stack signals such as Java, C++, Rust, TypeScript, Electron, React, Spring, etc.
+4. detect domain hypotheses from code, docs, routes, schema, tests, and names
+5. ask focused questions
+6. generate native prompt surfaces
+7. generate a project-specific harness profile
+8. offer optional local enforcement
+
+## Existing project workflow
+
+Ask:
 
 ```text
-/anyharness:harness-core
-/anyharness:init-project
-/anyharness:risk-classify
-/anyharness:new-feature
-/anyharness:design-review
-/anyharness:implementation-plan
-/anyharness:code-review
-/anyharness:test-plan
-/anyharness:security-review
-/anyharness:release-check
+Use AnyHarness to adopt this existing repository safely.
 ```
 
-For most repos, still start with the CLI:
+Default behavior for existing projects:
 
-```bash
-npx anyharness new       # new repo
-npx anyharness adopt     # existing repo
-```
+- read-only scan first
+- no overwrite
+- draft native prompt changes if `CLAUDE.md` or `AGENTS.md` already exists
+- generate domain hypotheses with evidence
+- ask for confirmation before writing
+- do not install hooks unless explicitly requested
 
-The CLI installs the repo-local prompt surfaces and enforcement files. The plugin gives Claude interactive workflows.
+## Domain discovery workflow
 
----
+AnyHarness does not ship authoritative domain packs. Instead, it produces domain hypotheses.
 
-## Codex usage
-
-Install the plugin from a local marketplace during development:
+Example output:
 
 ```text
-codex plugin marketplace add ./path/to/AnyHarness-v2.2
+Domain hypotheses:
+- ecommerce/payment: confidence medium
+- inventory consistency: confidence medium
+
+Evidence:
+- src/payment/PaymentCallbackController.java
+- src/order/OrderService.java
+- migrations/create_inventory_reservations.sql
+- docs/checkout.md
+
+Unknowns:
+- whether payment callbacks can repeat
+- whether inventory is reserved or deducted immediately
+- where order state transitions are defined
 ```
 
-Then ask Codex:
+Then it asks focused questions:
 
 ```text
-Use AnyHarness to initialize this repository.
-Use AnyHarness to review this diff.
-Use AnyHarness to prepare a release check.
+1. Can payment callbacks be delivered more than once?
+2. Is order final price frozen at order creation?
+3. Is inventory reserved at checkout or deducted at payment success?
+4. Does fulfillment happen immediately after payment success?
 ```
 
-For persistent project instructions, use:
+Only after user confirmation does it synthesize project rules.
 
-```bash
-npx anyharness prompt --target codex --write
-```
+## Expert review roles
 
-This writes `AGENTS.md` or drafts `.anyharness/drafts/AGENTS.append.md` if `AGENTS.md` already exists.
-
----
-
-## Cursor usage
-
-Cursor support is lightweight by default:
-
-```bash
-npx anyharness prompt --target cursor --write
-```
-
-This writes:
-
-```text
-.cursor/rules/anyharness.mdc
-```
-
-Cursor rules inject the behavioral guardrails. Full enforcement still comes from the CLI, Git hooks, and CI:
-
-```bash
-npx anyharness new
-# or
-npx anyharness adopt --enforce
-```
-
----
-
-## Risk levels
-
-| Level | Meaning | Examples | Gates |
-|---|---|---|---|
-| L0 | Low risk | docs, UI copy, small style changes | self-check |
-| L1 | Normal feature | CRUD, ordinary UI/API work | requirement + test plan |
-| L2 | Core/sensitive | auth, authorization, file upload, database schema, external API | design + security + tests + approval |
-| L3 | Critical/irreversible | production data, migration, public API break, architecture shift | full design + migration + rollback + CI + explicit approval |
-
-Any change touching secrets, migrations, auth, payments, CI/CD, deployment, public API, or production data is escalated.
-
----
-
-## Commit message gate
-
-AnyHarness expects commit messages to include a risk tag:
-
-```text
-feat(auth): rotate refresh tokens [risk:L2]
-```
-
-For L2/L3 changes, add trailers:
-
-```text
-Risk-Level: L2
-Gate-Review: .anyharness/gates/refresh-token.json
-Security-Review: .anyharness/gates/refresh-token-security.json
-Tests: npm test
-Human-Approval: required
-Rollback: docs/release/refresh-token.md
-```
-
-The `commit-msg` hook blocks missing risk metadata when enforcement is enabled.
-
----
-
-## Gate artifacts
-
-High-risk changes need machine-readable evidence:
-
-```text
-.anyharness/gates/<change-id>.json
-.anyharness/approvals/<change-id>.json
-```
-
-Example:
-
-```bash
-npx anyharness gate create --task "rotate refresh tokens" --risk L2 --gates design,security,test,release
-npx anyharness gate approve <gate-id> --notes "Approved after design and security review."
-```
-
-These artifacts allow hooks and CI to verify that the AI did not merely claim the change was safe.
-
----
-
-## Docs drift gate
-
-AnyHarness checks whether code changes imply documentation updates.
+AnyHarness creates project-specific roles from the project harness profile.
 
 Examples:
 
-| Changed area | Expected evidence |
-|---|---|
-| API routes / OpenAPI / GraphQL / proto | API docs or docs-impact justification |
-| database schema / migrations | migration plan, rollback plan, data docs |
-| auth / security | security review artifact |
-| `.env.example` / deploy config | deployment docs |
-| `CLAUDE.md` / `AGENTS.md` / `.claude` / `.codex` | governance change note |
+```text
+Payment Idempotency Reviewer
+Inventory Consistency Reviewer
+Electron IPC Boundary Reviewer
+Low-Latency C++ Reviewer
+Order State Machine Reviewer
+Architecture Trade-off Reviewer
+Performance and Memory Reviewer
+Release Readiness Reviewer
+```
 
-If docs do not need updating, record the reason in a gate artifact instead of silently skipping it.
+The roles are not just labels. Each one includes:
 
----
+- scope
+- required context
+- project-specific invariants
+- blocker criteria
+- required evidence
+- output schema
+
+## Review packets
+
+A review packet solves the common problem: another model reviews code without enough context.
+
+Ask:
+
+```text
+Use AnyHarness to create a security review packet for the staged diff.
+```
+
+Generated packet:
+
+```text
+.anyharness/packets/<id>/
+  PROMPT.md
+  PROJECT_PROFILE.md
+  DIFF.patch
+  CHANGED_FILES.txt
+  RELEVANT_FILES.md
+  GATE_REQUIREMENTS.md
+  DOMAIN_INVARIANTS.md
+  UNKNOWN.md
+```
+
+You can give that packet to another model and ask it to perform one expert role only.
+
+## Modes
+
+| Mode | What it does | Best for |
+|---|---|---|
+| Skill-only | LLM interaction, domain discovery, prompt surfaces, review packets | solo developers, exploration |
+| Project Harness | Adds `.anyharness/profile.json` and gates | serious personal projects, small teams |
+| Enforcement | Adds local scripts, Git hooks, CI workflow | teams and production repositories |
 
 ## Safety model
 
-AnyHarness intentionally separates prompt instructions from enforcement:
+AnyHarness follows these rules:
+
+1. Installation does not modify a repo.
+2. Scanning happens before writing.
+3. Existing prompt files are not overwritten; drafts are generated.
+4. Domain examples are not authoritative.
+5. User confirmation is required before writing profile or enforcement files.
+6. Generated local scripts must be reviewable.
+7. Hard enforcement is optional.
+
+## Repository layout
 
 ```text
-LLM rules can guide.
-Hooks and CI can block.
-Gate artifacts can prove.
-Humans still approve irreversible work.
+.claude-plugin/marketplace.json
+.agents/plugins/marketplace.json
+plugins/
+  claude/anyharness/
+    .claude-plugin/plugin.json
+    skills/anyharness/
+      SKILL.md
+      references/
+      scripts/
+  codex/anyharness/
+    .codex-plugin/plugin.json
+    skills/anyharness/
+      SKILL.md
+      references/
+      scripts/
+standalone/
+  skills/anyharness/
+    SKILL.md
+    references/
+    scripts/
+scripts/validate.mjs
+test/run.mjs
 ```
 
-Local Git hooks are convenience gates. CI is the final enforcement layer because local hooks can be bypassed.
+## Development validation
 
----
-
-## Development
+This repository includes a validation script for maintainers:
 
 ```bash
-npm run validate
-npm test
 npm run check
 ```
 
-The validation script checks plugin manifests, skills, hooks, marketplace files, prompt surfaces, package metadata, and core project layout.
+This is not the user installation path. It only validates the plugin package structure.

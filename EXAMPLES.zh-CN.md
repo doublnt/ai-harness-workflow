@@ -1,182 +1,86 @@
+# AnyHarness v3 示例
 
-## 0. Prompt 注入 vs npx 执行
+## 1. 老 Java 电商项目
 
-用户问：
-
-```text
-怎么让 AI 遵守 AnyHarness 规则？
-```
-
-错误心智：
+用户：
 
 ```text
-只要运行 npx anyharness，模型就自动知道规则。
+Use AnyHarness to adopt this existing repository safely.
 ```
 
-AnyHarness 心智：
+AnyHarness 扫描后输出：
 
 ```text
-npx anyharness prompt --target core
+Detected stack:
+- Java / Spring Boot
+- REST API
+- SQL migrations
+- Messaging signals
+
+Domain hypotheses:
+- ecommerce/payment: medium confidence
+- inventory consistency: medium confidence
+
+Evidence:
+- OrderService.java
+- PaymentCallbackController.java
+- InventoryReservationRepository.java
+- docs/checkout.md
 ```
 
-把打印出来的 prompt 注入给 LLM，或者写入项目本地 prompt surfaces：
+然后先问问题，再生成项目规则。
 
-```bash
-npx anyharness prompt --target claude --write
-npx anyharness prompt --target codex --write
-npx anyharness adopt
-```
+## 2. Electron 客户端
 
-然后用 `npx anyharness check --staged` 或 CI 检查结果。
-
-# 示例
-
-这些例子展示普通 AI 编程和 guardrail-driven AI 编程的区别。
-
-## 1. 隐藏风险：用户数据导出
-
-用户说：
+AnyHarness 不应该只套通用 Web 规则。它应该发现：
 
 ```text
-加一个用户 CSV 导出功能。
+main process
+renderer process
+preload bridge
+ipcMain / ipcRenderer
+本地文件访问
+auto updater
 ```
 
-坏回答：
+然后创建专家角色：
 
 ```text
-我会加一个导出接口，把所有用户字段导出来。
+Electron Security Reviewer
+IPC Boundary Reviewer
+Local Storage and Secrets Reviewer
+Desktop Release Reviewer
 ```
 
-问题：
+## 3. C++ 交易服务
 
-- 涉及用户数据。
-- 可能泄露 PII。
-- 需要授权判断。
-- 需要审计或至少明确是否不审计。
-- 需要字段白名单。
-
-AnyHarness 回答：
+AnyHarness 应该发现领域信号：
 
 ```text
-Risk Level: L2
-Reason: user data export and authorization boundary.
-Required Gates: requirement, design, security, test, release.
-Questions:
-- 哪些字段允许导出？
-- 哪些角色允许导出？
-- 是否需要审计？
-- 是否有大小限制？
+market_data
+order_book
+execution_report
+venue
+risk_check
+sequence number
+replay
 ```
 
-## 2. 过度重构：小 bug fix
-
-用户说：
+然后询问：
 
 ```text
-修复 email 为空时崩溃的问题。
+是否有延迟 SLO？
+hot path 是否要求无堆分配？
+重复或乱序消息如何处理？
+订单状态机在哪里定义？
 ```
 
-坏回答：
+## 4. 跨模型 review packet
+
+不要直接把一段代码丢给另一个模型。应该让 AnyHarness 生成上下文包：
 
 ```text
-我会重写整个 validation 层，引入新的 schema abstraction。
+Use AnyHarness to create a performance review packet for the staged diff.
 ```
 
-AnyHarness 回答：
-
-```text
-Risk Level: L1
-Plan:
-- 增加 empty email 的回归测试。
-- 只修改 email validation 分支。
-- 不重构 validator framework。
-```
-
-## 3. 文档漂移：API 改动
-
-改动文件：
-
-```text
-app/api/users/route.ts
-```
-
-坏 commit：
-
-```text
-feat: update users endpoint [risk:L1]
-```
-
-AnyHarness 结果：
-
-```text
-BLOCKED: Docs drift detected.
-Reason: API route changed but no API docs, changelog, or gate artifact explains docs impact.
-Fix: 更新 docs/api/*，或在 gate artifact 里写 Docs impact: none + 理由。
-```
-
-## 4. 不安全 commit：auth 改动
-
-坏 commit：
-
-```text
-feat: update auth
-```
-
-AnyHarness 结果：
-
-```text
-BLOCKED: missing risk tag.
-BLOCKED: auth files require L2 metadata.
-Required:
-- [risk:L2]
-- Gate-Review
-- Security-Review
-- Tests
-- Rollback
-- Human-Approval
-```
-
-好 commit：
-
-```text
-feat(auth): rotate refresh tokens [risk:L2]
-
-Risk-Level: L2
-Gate-Review: .anyharness/gates/2026-05-23-refresh-token.json
-Security-Review: .anyharness/gates/2026-05-23-refresh-token.json
-Tests: npm test
-Human-Approval: required
-Rollback: docs/release/2026-05-23-refresh-token.md
-```
-
-## 5. 缺少发布回滚
-
-改动文件：
-
-```text
-migrations/20260523_add_sessions.sql
-```
-
-AnyHarness 结果：
-
-```text
-BLOCKED: L3 database migration requires migration plan, rollback plan, release check, and approval artifact.
-```
-
-## 6. AI 没运行测试却说通过
-
-坏总结：
-
-```text
-Tests passed.
-```
-
-AnyHarness 总结：
-
-```text
-Tests:
-- Not run. Reason: no test dependencies installed in this environment.
-- Recommended command: npm test
-Untested Risks:
-- empty email input 的回归覆盖仍未验证。
-```
+再把 packet 给另一个模型，让它只执行指定专家角色。

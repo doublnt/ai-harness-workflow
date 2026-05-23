@@ -1,22 +1,19 @@
 {
   "name": "anyharness",
-  "displayName": "AnyHarness",
-  "version": "2.2.0",
-  "description": "Prompt injection and enforcement harness for AI coding agents: skills, hooks, project rules, Git gates, and CI checks.",
+  "description": "Skill-first adaptive engineering harness. Use one AnyHarness skill to discover project domain rules, generate expert review roles, create review packets, and optionally enable local gates.",
+  "version": "3.0.0",
   "author": {
     "name": "AnyHarness Contributors"
   },
   "repository": "https://github.com/your-org/anyharness",
   "license": "MIT",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json",
   "keywords": [
     "ai-coding",
-    "guardrails",
     "skills",
-    "hooks",
+    "engineering-harness",
     "code-review",
-    "testing",
-    "security"
-  ]
+    "domain-discovery",
+    "project-rules"
+  ],
+  "skills": "./skills/"
 }

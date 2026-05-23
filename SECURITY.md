@@ -1,22 +1,8 @@
 # Security Policy
 
-AnyHarness hooks run local commands. Review hook definitions before trusting them in Claude Code or Codex.
+AnyHarness v3 is skill-first. Installing the plugin does not install Git hooks,
+CI gates, or modify a repository by itself. Repository writes happen only when
+the user asks AnyHarness to generate native prompt surfaces or enable local
+enforcement.
 
-## Supported Versions
-
-| Version | Supported |
-|---|---|
-| 2.x | yes |
-| 0.x | unsupported |
-
-## Reporting Vulnerabilities
-
-Open a private advisory or email the maintainers. Do not include secrets in reports.
-
-## Security Principles
-
-- Hooks must not exfiltrate data.
-- Hooks must not contact external networks.
-- Hooks must not read real `.env` files.
-- Hooks must fail closed only for clearly documented gates.
-- Enforcement can be configured as `advisory`, `enforcing`, or `strict`.
+Report security issues privately to the maintainers before public disclosure.
