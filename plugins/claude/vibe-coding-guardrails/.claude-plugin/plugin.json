@@ -1,0 +1,22 @@
+{
+  "name": "vibe-coding-guardrails",
+  "displayName": "Vibe Coding Guardrails",
+  "version": "0.1.0",
+  "description": "Pure skills for AI development governance in Claude Code: project initialization, risk gates, design review, code review, test planning, security review, and release checks.",
+  "author": {
+    "name": "Vibe Coding Guardrails Contributors",
+    "url": "https://github.com/your-org/vibe-coding-guardrails"
+  },
+  "homepage": "https://github.com/your-org/vibe-coding-guardrails",
+  "repository": "https://github.com/your-org/vibe-coding-guardrails",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "governance",
+    "code-review",
+    "testing",
+    "security",
+    "release"
+  ],
+  "skills": "./skills/"
+}

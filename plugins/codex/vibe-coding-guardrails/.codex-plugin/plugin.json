@@ -1,0 +1,33 @@
+{
+  "name": "vibe-coding-guardrails",
+  "version": "0.1.0",
+  "description": "Pure skills for AI development governance in Codex: project initialization, risk gates, design review, code review, test planning, security review, and release checks.",
+  "author": {
+    "name": "Vibe Coding Guardrails Contributors",
+    "url": "https://github.com/your-org/vibe-coding-guardrails"
+  },
+  "homepage": "https://github.com/your-org/vibe-coding-guardrails",
+  "repository": "https://github.com/your-org/vibe-coding-guardrails",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "governance",
+    "code-review",
+    "testing",
+    "security",
+    "release"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Vibe Coding Guardrails",
+    "shortDescription": "Governance gates for AI-assisted coding.",
+    "longDescription": "Initialize project-specific AI development guardrails, classify task risk, review designs and code, plan tests, review security, and check release readiness. Pure skills only: no hooks, no MCP, no app connectors.",
+    "developerName": "Vibe Coding Guardrails Contributors",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/your-org/vibe-coding-guardrails"
+  }
+}

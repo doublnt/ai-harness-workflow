@@ -1,37 +1,12 @@
 {
-  "name": "vibe-coding-guardrails",
+  "name": "vibe-coding-guardrails-skills-v1",
   "version": "0.1.0",
-  "description": "Workflow-aware AI development governance bootstrapper for Claude Code, Codex, and Spec Kit compatible projects.",
+  "private": true,
   "type": "module",
-  "bin": {
-    "vibe-guardrails": "./bin/vibe-guardrails.js"
-  },
+  "description": "Pure skills v1 for AI coding governance across Claude Code and Codex.",
   "scripts": {
-    "init:demo": "node ./src/cli.js init --target detect --dry-run",
-    "test": "node --test",
-    "lint": "node ./scripts/lint-basic.js",
-    "check": "npm run lint && npm test"
+    "test": "node scripts/validate.mjs",
+    "validate": "node scripts/validate.mjs"
   },
-  "engines": {
-    "node": ">=18.17"
-  },
-  "keywords": [
-    "ai",
-    "coding-agent",
-    "claude-code",
-    "codex",
-    "spec-kit",
-    "governance",
-    "guardrails",
-    "vibe-coding"
-  ],
-  "author": "",
-  "license": "MIT",
-  "files": [
-    "bin/",
-    "src/",
-    "docs/",
-    "README.md",
-    "LICENSE"
-  ]
+  "license": "MIT"
 }

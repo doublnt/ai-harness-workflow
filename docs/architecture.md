@@ -1,30 +1,25 @@
 # Architecture
 
-## Components
+## Product shape
 
-- `src/cli.js`: argument parsing and command orchestration
-- `src/scanner.js`: shallow project scan and AI workflow detection
-- `src/generator.js`: target-specific file planning and generation
-- `src/templates/`: markdown templates for Claude, Codex, Spec Kit, and common references
-- `src/report.js`: scan and install reports
-- `src/interactive.js`: confirmation prompts
+Vibe Coding Guardrails v1 is a pure skills distribution:
 
-## Flow
+```text
+Marketplace catalog -> installable plugin -> skills -> references
+```
 
-~~~text
-parse args
-  -> scan project
-  -> recommend target
-  -> build config
-  -> plan files
-  -> print scan report
-  -> confirm
-  -> write safe files or drafts
-  -> print install report
-~~~
+The plugin contributes workflows. It does not contribute runtime automation.
+
+## Responsibilities
+
+| Layer | Responsibility |
+|---|---|
+| Marketplace | Discovery and installation metadata |
+| Plugin manifest | Namespacing and component paths |
+| Skill | Reusable workflow instructions |
+| Resources | Governance rules, gates, templates, and checklists |
+| Validation script | Repository quality checks only |
 
 ## Safety model
 
-The scanner is read-only. The generator writes only after confirmation, unless the user explicitly passes `--yes`.
-
-All writes go through `writeFileSafe`, which never overwrites existing files and writes drafts on conflict.
+The safest boundary is to make installation side-effect free. Installation only exposes skills. A skill can ask the AI client to inspect or edit a repository, but the skill instructions require read-only scanning first and explicit user confirmation before writes.

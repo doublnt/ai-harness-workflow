@@ -1,16 +1,13 @@
 # Security Policy
 
-This project generates AI governance files but does not provide security guarantees.
+This project is a governance plugin. v1 avoids runtime execution by design.
 
-## Reporting issues
+Report security issues if a skill or manifest encourages any of the following:
 
-Open a private security advisory or contact the maintainers if you find behavior that could cause:
+- running destructive commands without confirmation
+- reading `.env` or secret files by default
+- weakening tests or security controls
+- modifying authentication, authorization, migrations, CI/CD, production config, or secrets without human approval
+- hiding unknowns or claiming tests passed without evidence
 
-- accidental secret exposure
-- unsafe file overwrite
-- dangerous default permissions
-- generated instructions that bypass human approval for high-risk changes
-
-## Security design
-
-The CLI starts in read-only analysis mode and writes only after confirmation unless `--yes` is used. Generated permission files are conservative and should be reviewed before committing.
+The intended default behavior is: read-only scan, explicit report, user confirmation, then scoped writes.

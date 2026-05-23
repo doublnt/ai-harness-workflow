@@ -1,14 +1,13 @@
 # CLAUDE.md
 
-This repository uses `AGENTS.md` as the shared governance source for coding agents.
+This repository packages Claude Code and Codex skills for AI coding governance.
 
-Read shared instructions:
+Before changing files, read `AGENTS.md` and keep v1 skills-only:
 
-@AGENTS.md
+- no hooks
+- no MCP
+- no app connectors
+- no plugin runtime scripts
+- no default tool pre-approval
 
-## Claude-specific notes
-
-- Keep generated command templates concise and executable.
-- Do not replace Codex support while changing Claude support.
-- Do not replace Claude support while changing Codex support.
-- Prefer small focused changes with tests.
+Run `npm test` after modifying plugin manifests or skills.

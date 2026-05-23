@@ -1,27 +1,29 @@
 # Contributing
 
-Thank you for contributing.
+This project is intentionally conservative. v1 is skills-only.
 
-## Local checks
+## Allowed in plugin roots
 
-~~~bash
+- `.claude-plugin/plugin.json`
+- `.codex-plugin/plugin.json`
+- `skills/**/SKILL.md`
+- `resources/**/*.md`
+- `README.md`
+- `LICENSE`
+
+## Not allowed in v1 plugin roots
+
+- `hooks/`
+- `.mcp.json`
+- `.app.json`
+- `bin/`
+- executable scripts
+- default settings that pre-approve shell commands
+
+## Development
+
+```bash
 npm test
-npm run lint
-~~~
+```
 
-## Design expectations
-
-This project is intentionally small and dependency-free. Before adding a dependency, explain:
-
-- why built-in Node APIs are insufficient
-- supply-chain impact
-- maintenance impact
-- how the dependency will be tested
-
-## Pull request checklist
-
-- [ ] Scanner behavior tested when changed
-- [ ] Generator behavior tested when changed
-- [ ] No target output writes `.ai/`
-- [ ] Existing files are not overwritten without draft behavior
-- [ ] README/docs updated if behavior changed
+When adding a new skill, add it to both Claude and Codex plugin roots and make sure its frontmatter contains `name` and `description`.

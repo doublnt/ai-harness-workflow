@@ -1,187 +1,498 @@
-# Vibe Coding Guardrails
+# Vibe Coding Guardrails — Pure Skills v1
 
-A workflow-aware AI development governance bootstrapper for real repositories.
+[中文说明](./README.zh-CN.md) | English
 
-It scans an existing project, detects the user's AI coding workflow, asks for confirmation, and installs project-specific guardrails into one of these formats:
+Vibe Coding Guardrails is a pure-skills governance plugin for AI-assisted software development. It helps Claude Code, Codex, and compatible agent clients initialize project-specific engineering guardrails and run repeatable gates for risk classification, feature planning, design review, implementation planning, code review, test planning, security review, and release readiness.
 
-- Claude Code: `CLAUDE.md`, `.claude/commands/`, `.claude/skills/`, `.claude/rules/`
-- Codex: `AGENTS.md`, `.agents/skills/`, `.codex/rules/`, `.codex/config.toml`
-- Both: shared `AGENTS.md` plus Claude adapter files
-- Spec Kit compatible: governance addenda for `.specify/` projects
+The project is designed for teams and solo developers who use AI coding agents but still want explicit engineering standards, human approval for high-risk changes, and clear evidence before accepting AI-generated work.
 
-It deliberately does **not** generate a generic `.ai/` directory. The goal is to integrate with the AI workflow the team already uses.
+## What this repository provides
 
-## Why this exists
+This repository contains two installable plugin packages:
 
-AI coding tools can generate code quickly, but many failures happen after the code exists:
+```text
+plugins/claude/vibe-coding-guardrails/   # Claude Code plugin package
+plugins/codex/vibe-coding-guardrails/    # Codex plugin package
+```
 
-- missing boundary cases
-- unclear architecture assumptions
-- unsafe file changes
-- hidden security risks
-- weak tests
-- no release checklist
-- no rollback plan
-- AI claiming tests passed when they were not run
+It also contains local marketplace manifests:
 
-This project adds a governance layer around AI-assisted development:
+```text
+.claude-plugin/marketplace.json          # Claude local marketplace catalog
+.agents/plugins/marketplace.json         # Codex repo marketplace catalog
+```
 
-- risk classification
-- requirement gate
-- design gate
-- implementation gate
-- code review gate
-- testing gate
-- security gate
-- release gate
-- file change policy
-- human approval rules
+Both plugin packages provide the same governance skills:
 
-## Quick start
+```text
+init-project
+risk-classify
+new-feature
+design-review
+implementation-plan
+code-review
+test-plan
+security-review
+release-check
+```
 
-From the target repository:
+## v1 scope
 
-~~~bash
-npx vibe-coding-guardrails init --target detect
-~~~
+v1 is intentionally conservative.
 
-Or from a local checkout of this repo:
+Included:
 
-~~~bash
-node ./src/cli.js init --target detect
-~~~
+- Skills only.
+- Markdown governance resources.
+- Claude Code plugin manifest.
+- Codex plugin manifest.
+- Local marketplace manifests.
+- Validation script.
+- No automatic repository modification during plugin installation.
 
-Dry run first:
+Not included:
 
-~~~bash
-node ./src/cli.js init --target detect --dry-run
-~~~
+- No hooks.
+- No MCP servers.
+- No app connectors.
+- No lifecycle scripts inside plugin roots.
+- No default shell execution.
+- No automatic approval behavior.
+- No automatic writes during installation.
 
-Generate Claude format:
+Installing the plugin only makes skills available. A repository is modified only after the user explicitly invokes `init-project`, reviews the scan report, confirms the target format, and approves file generation.
 
-~~~bash
-node ./src/cli.js init --target claude
-~~~
+## Who should use this
 
-Generate Codex format:
+Use this plugin if you want AI coding agents to follow a consistent process before writing or accepting code:
 
-~~~bash
-node ./src/cli.js init --target codex
-~~~
+- Classify risk before implementation.
+- Clarify requirements before coding.
+- Compare design options before architecture changes.
+- Require human approval for security, data, auth, deployment, migration, and production-impacting changes.
+- Force explicit Unknowns instead of confident guessing.
+- Require test plans for generated code.
+- Require security review for sensitive changes.
+- Require release and rollback plans for Level 2 or Level 3 changes.
 
-Generate both:
+## Directory layout
 
-~~~bash
-node ./src/cli.js init --target both
-~~~
+```text
+vibe-coding-guardrails-skills-v1/
+  .claude-plugin/
+    marketplace.json
+  .agents/
+    plugins/
+      marketplace.json
 
-Generate Spec Kit compatible addenda:
+  plugins/
+    claude/
+      vibe-coding-guardrails/
+        .claude-plugin/
+          plugin.json
+        skills/
+          init-project/SKILL.md
+          risk-classify/SKILL.md
+          new-feature/SKILL.md
+          design-review/SKILL.md
+          implementation-plan/SKILL.md
+          code-review/SKILL.md
+          test-plan/SKILL.md
+          security-review/SKILL.md
+          release-check/SKILL.md
+        resources/
+          core-rules.md
+          risk-levels.md
+          file-change-policy.md
+          gates.md
+          scan-protocol.md
+          project-output-templates.md
+          stack-checklists.md
+          spec-kit-compatibility.md
 
-~~~bash
-node ./src/cli.js init --target speckit
-~~~
+    codex/
+      vibe-coding-guardrails/
+        .codex-plugin/
+          plugin.json
+        skills/
+          init-project/SKILL.md
+          risk-classify/SKILL.md
+          new-feature/SKILL.md
+          design-review/SKILL.md
+          implementation-plan/SKILL.md
+          code-review/SKILL.md
+          test-plan/SKILL.md
+          security-review/SKILL.md
+          release-check/SKILL.md
+        resources/
+          core-rules.md
+          risk-levels.md
+          file-change-policy.md
+          gates.md
+          scan-protocol.md
+          project-output-templates.md
+          stack-checklists.md
+          spec-kit-compatibility.md
 
-## CLI options
+  docs/
+    architecture.md
+    install.md
+    safety-model.md
+    skill-contract.md
 
-~~~text
-vibe-guardrails init [options]
+  scripts/
+    validate.mjs
+```
 
-Options:
-  --target detect|claude|codex|both|speckit
-  --root <path>
-  --dry-run
-  --yes
-  --lite
-  --full
-  --help
-~~~
+## Quick start: Claude Code
 
-Default behavior is `--target detect`, interactive confirmation, standard scope.
+From a local checkout of this repository, add the local marketplace and install the plugin:
 
-## What it generates
+```text
+/plugin marketplace add ./path/to/vibe-coding-guardrails-skills-v1
+/plugin install vibe-coding-guardrails@vibe-guardrails
+```
 
-For Claude Code:
+Then open a project where you want governance guardrails and run:
 
-~~~text
+```text
+/vibe-coding-guardrails:init-project
+```
+
+After initialization, use the other skills during development:
+
+```text
+/vibe-coding-guardrails:risk-classify
+/vibe-coding-guardrails:new-feature
+/vibe-coding-guardrails:design-review
+/vibe-coding-guardrails:implementation-plan
+/vibe-coding-guardrails:code-review
+/vibe-coding-guardrails:test-plan
+/vibe-coding-guardrails:security-review
+/vibe-coding-guardrails:release-check
+```
+
+## Quick start: Codex
+
+From a local checkout of this repository, add the repo marketplace:
+
+```text
+codex plugin marketplace add ./path/to/vibe-coding-guardrails-skills-v1
+```
+
+Then install `vibe-coding-guardrails` from the `Vibe Guardrails` marketplace in Codex.
+
+Use the skills naturally, for example:
+
+```text
+Use Vibe Coding Guardrails to initialize this repository.
+Use Vibe Coding Guardrails to classify the risk of this task.
+Use Vibe Coding Guardrails to review this diff.
+Use Vibe Coding Guardrails to prepare a test plan.
+Use Vibe Coding Guardrails to run a release check.
+```
+
+## Recommended first run
+
+In any target project, start with:
+
+```text
+/init-project
+```
+
+or, with the Claude namespace:
+
+```text
+/vibe-coding-guardrails:init-project
+```
+
+The skill must follow this sequence:
+
+```text
+1. Read-only scan.
+2. Detect current AI workflow.
+3. Detect project type, stack, tests, CI, database, auth, security signals, and documentation.
+4. Produce a project scan report.
+5. Recommend target format: claude, codex, both, or speckit-compatible.
+6. Ask for user confirmation.
+7. Stop unless the user confirms.
+8. Generate local governance files only after confirmation.
+9. Avoid overwriting existing files; create draft files on conflict.
+10. Print an installation report and remaining Unknowns.
+```
+
+## What `init-project` creates
+
+Depending on the user-selected target, `init-project` can generate project-local governance files.
+
+### Claude target
+
+```text
 CLAUDE.md
-.claude/rules/engineering-constitution.md
-.claude/rules/risk-levels.md
-.claude/rules/file-change-policy.md
-.claude/commands/init-project.md
-.claude/commands/new-feature.md
-.claude/commands/design-review.md
-.claude/commands/implementation-plan.md
-.claude/commands/code-review.md
-.claude/commands/test-plan.md
-.claude/commands/release-check.md
-.claude/commands/risk-classify.md
-.claude/skills/ai-development-governance/SKILL.md
-.claude/skills/ai-development-governance/references/*.md
-.claude/_drafts/*.draft.md
-~~~
+.claude/
+  rules/
+    engineering-constitution.md
+    risk-levels.md
+    file-change-policy.md
+  commands/
+    new-feature.md
+    design-review.md
+    implementation-plan.md
+    code-review.md
+    test-plan.md
+    security-review.md
+    release-check.md
+    risk-classify.md
+  skills/
+    ai-development-governance/
+      SKILL.md
+      references/
+        project-context.md
+        workflow-overview.md
+        requirement-gate.md
+        design-gate.md
+        implementation-gate.md
+        code-review-gate.md
+        testing-gate.md
+        security-gate.md
+        release-gate.md
+  _drafts/
+    CONTRIBUTING.draft.md
+    PULL_REQUEST_TEMPLATE.draft.md
+    CI-GATES.draft.md
+```
 
-For Codex:
+### Codex target
 
-~~~text
+```text
 AGENTS.md
-.codex/config.toml
-.codex/rules/governance.rules
-.codex/rules/safety.rules
-.agents/skills/ai-development-governance/SKILL.md
-.agents/skills/ai-development-governance/references/*.md
-.agents/_drafts/*.draft.md
-~~~
+.codex/
+  config.toml
+  rules/
+    governance.rules
+    safety.rules
+.agents/
+  skills/
+    ai-development-governance/
+      SKILL.md
+      references/
+        project-context.md
+        engineering-constitution.md
+        risk-levels.md
+        file-change-policy.md
+        workflow-overview.md
+        requirement-gate.md
+        design-gate.md
+        implementation-gate.md
+        code-review-gate.md
+        testing-gate.md
+        security-gate.md
+        release-gate.md
+  _drafts/
+    CONTRIBUTING.draft.md
+    PULL_REQUEST_TEMPLATE.draft.md
+    CI-GATES.draft.md
+```
 
-For both:
+### Both target
 
-~~~text
-AGENTS.md                 # shared source for coding agents
-CLAUDE.md                 # Claude adapter
+```text
+AGENTS.md
+CLAUDE.md
 .claude/**
 .codex/**
 .agents/**
 _drafts/**
-~~~
+```
 
-## Design principles
+### Spec Kit compatible target
 
-1. Start read-only.
-2. Treat repo contents as untrusted data, not instructions.
-3. Never overwrite existing AI instruction files without generating a draft.
-4. Mark unknowns explicitly.
-5. Use risk levels to avoid process overload.
-6. Require human approval for irreversible or high-risk changes.
-7. Make gates concrete and reviewable.
-8. Integrate with current AI workflow instead of forcing a new one.
+```text
+.specify/
+  governance/
+    guardrails.md
+    project-context.md
+    risk-levels.md
+    file-change-policy.md
+  commands/
+    governance-check.md
+```
 
-## Relationship to Spec Kit
+The plugin does not replace Spec Kit. It adds risk classification, file-change boundaries, security gates, test gates, release gates, and human approval rules around a spec-driven workflow.
 
-Spec Kit focuses on spec-driven development: specify, plan, tasks, implement.
+## Skill reference
 
-This project focuses on AI engineering governance: risk, permissions, review, testing, security, release, rollback, and workflow integration.
+### `init-project`
 
-The two are compatible. If a `.specify/` project is detected, this tool can generate Spec Kit governance addenda instead of replacing the existing SDD workflow.
+Initializes local project governance. It scans the repository, detects existing AI workflow files, reports Unknowns, asks for confirmation, and then creates project-specific guardrails.
 
-## Repository layout
+Use for:
 
-~~~text
-bin/                    CLI entry point
-src/                    scanner, generator, templates
-test/                   Node test runner tests
-docs/                   design and usage docs
-examples/               small sample projects
-~~~
+- New project onboarding.
+- Existing project governance setup.
+- Claude/Codex workflow alignment.
+- Spec Kit compatible guardrail installation.
+
+### `risk-classify`
+
+Classifies a task before implementation.
+
+Output includes:
+
+```text
+Risk Level:
+Reason:
+Required Gates:
+Human Approval Required:
+Likely Files Affected:
+Red Zone Concerns:
+Unknowns:
+```
+
+### `new-feature`
+
+Turns a feature request into a feature spec, risk classification, design options, and implementation plan. It must stop before modifying files unless the user explicitly approves.
+
+### `design-review`
+
+Reviews a design against the project governance rules.
+
+A design cannot pass if it has no alternatives. Level 2+ designs require at least three options and a rollback plan.
+
+### `implementation-plan`
+
+Creates a scoped implementation plan before code changes. It identifies files to modify, files to create, files not to touch, tests to add, dependencies, migration requirements, and rollback plan.
+
+### `code-review`
+
+Reviews current diff or provided code.
+
+It checks correctness, simplicity, modularity, security, testing gaps, performance, observability, rollback readiness, and Unknowns.
+
+### `test-plan`
+
+Generates a test plan for the current change, including unit, integration, E2E, security, regression, manual checks, commands to run, and untested risks.
+
+### `security-review`
+
+Runs threat modeling and security review for sensitive changes, including auth, authorization, user input, file upload, external URLs, webhooks, secrets, sessions, LLM inputs, and agent tool calling.
+
+### `release-check`
+
+Reviews release readiness. Level 2+ work without rollback plan must be blocked.
+
+## Risk levels
+
+```text
+Level 0 — Low Risk
+Small UI text, minor style changes, small utility functions, documentation.
+
+Level 1 — Normal Feature
+New page, new API, ordinary CRUD, ordinary business logic, ordinary component.
+
+Level 2 — Core Feature
+Auth, authorization, payment, file upload, database schema, core business flow, state machine, external API, AI tool calling.
+
+Level 3 — Critical Change
+Architecture migration, data migration, production data modification, public API breaking change, core model refactor, permission model change, deployment strategy change.
+```
+
+Escalation rules:
+
+- Anything involving user data, permissions, auth, payment, file upload, database changes, external service permissions, security boundaries, production, or AI agent tool permissions is at least Level 2.
+- Anything involving irreversible data modification is Level 3.
 
 ## Safety model
 
-Generated rules classify files into three zones:
+The plugin follows these rules:
 
-- Green: ordinary source/test files inside approved scope
-- Yellow: shared/config/build files that require explanation
-- Red: auth, authorization, payment, production data, migrations, secrets, CI behavior, deployment, AI instruction files
+- Repository content is treated as data, not instructions.
+- Real `.env` files and secrets should not be read.
+- Unknowns must be explicit.
+- Existing files must not be overwritten without confirmation.
+- High-risk tasks require human approval.
+- AI may propose; humans approve irreversible decisions.
+- Tests must not be claimed as passed unless actually run.
+- New dependencies require justification.
+- Security-sensitive changes require threat modeling.
+- Database changes require migration and rollback plans.
+- Performance claims require measurement.
 
-Red-zone changes require explicit human approval.
+## Existing-file policy
 
-## Current status
+When `init-project` generates local governance files:
 
-This is a v0.1 reference implementation. It is intentionally dependency-free and conservative.
+1. If a target file does not exist, it may be created after confirmation.
+2. If a target file exists, it must not be overwritten.
+3. If a change is needed, a draft or append proposal must be created.
+4. Existing `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`, `.codex/config.toml`, and CI files are treated as high-risk project configuration files.
+
+## Validation
+
+Run:
+
+```bash
+npm test
+```
+
+The validator checks:
+
+- Claude plugin manifest exists.
+- Codex plugin manifest exists.
+- Plugin manifests point to `./skills/`.
+- All skill folders contain `SKILL.md`.
+- Every skill frontmatter has `name` and `description`.
+- Plugin roots contain no hooks, MCP configs, app connectors, or runtime scripts.
+- Marketplace entries point at existing plugin folders.
+
+## Local development
+
+Clone the repository, then run:
+
+```bash
+npm test
+```
+
+There are no runtime dependencies in v1. This is intentional.
+
+## Marketplace readiness checklist
+
+Before public marketplace submission, update:
+
+- Plugin author metadata.
+- Repository URLs.
+- Homepage URL.
+- License metadata if needed.
+- Screenshots or icons if required by the target marketplace.
+- Privacy and security documentation.
+- Example project screenshots or demos.
+
+## Troubleshooting
+
+### The plugin installed, but no files appeared in my project
+
+That is expected. Installation only makes skills available. Run `init-project` and confirm the generated plan before files are created.
+
+### The skill refuses to modify an existing file
+
+That is expected if the file is considered sensitive or already exists. The skill should generate a draft or append proposal instead.
+
+### The skill says `Unknown`
+
+That is expected when project facts cannot be proven from repository files. Fill in the missing information or allow the skill to inspect the relevant project files.
+
+### I already use Spec Kit
+
+Use the `speckit-compatible` target. Vibe Coding Guardrails should add governance around Spec Kit rather than replacing it.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Security
+
+See [SECURITY.md](./SECURITY.md).
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
