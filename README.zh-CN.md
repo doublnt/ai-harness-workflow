@@ -100,50 +100,175 @@ AGENTS.md      # Codex / 通用 agent 指令
 
 这些都只会在用户明确确认后生成。
 
-## Claude Code 快速开始
+## 使用教程：Claude Code
 
-1. 把这个仓库添加为 Claude plugin marketplace。
-2. 安装 `anyharness` 插件。
-3. 运行：
+### 前提条件
+
+- 已安装 [Claude Code](https://claude.ai/code)（CLI 或桌面版）
+- Node.js 18 或更高版本
+- 在本地克隆本仓库：
+
+```bash
+git clone https://github.com/your-org/anyharness.git ~/anyharness
+# 也可以放到你习惯的位置
+```
+
+### 第一步 — 注册本地插件 marketplace
+
+打开（或创建）Claude Code 用户配置文件：
+
+```bash
+# macOS / Linux
+~/.claude/settings.json
+
+# Windows
+%APPDATA%\Claude\settings.json
+```
+
+在文件中加入 `plugins` 字段（如果文件已有内容，合并进去即可）：
+
+```json
+{
+  "plugins": {
+    "marketplaces": [
+      {
+        "url": "file:///Users/yourname/anyharness/.claude-plugin/marketplace.json"
+      }
+    ]
+  }
+}
+```
+
+> 把 `/Users/yourname/anyharness` 替换为你实际克隆的路径。
+> 在克隆目录里执行 `pwd` 可以确认路径。
+
+### 第二步 — 安装插件
+
+在 Claude Code 中执行：
+
+```text
+/plugins install anyharness
+```
+
+也可以打开插件 marketplace 界面，找到 **anyharness**，点击安装。
+
+### 第三步 — 验证安装
+
+```text
+/anyharness:anyharness
+```
+
+你应该能看到 AnyHarness 响应并询问你想做什么。
+
+### 第四步 — 在你的项目中使用
+
+打开（或 `cd` 进入）你要分析的项目，然后：
+
+**接管已有项目：**
 
 ```text
 /anyharness:anyharness adopt this repository safely
 ```
 
-新项目：
+**初始化新项目：**
 
 ```text
 /anyharness:anyharness initialize this new project
 ```
 
-review 当前改动：
+**review 已暂存的改动：**
 
 ```text
 /anyharness:anyharness review the current staged diff
 ```
 
-生成跨模型 review packet：
+**生成跨模型 review packet：**
 
 ```text
 /anyharness:anyharness create a security review packet for the staged diff
 ```
 
-## Codex 快速开始
+AnyHarness 会全程交互引导你——扫描项目、提问确认，在写入任何文件前都会等你确认。
 
-1. 把这个仓库添加为 Codex plugin marketplace。
-2. 安装 `anyharness` 插件。
-3. 直接说：
+---
+
+## 使用教程：Codex
+
+### 前提条件
+
+- 已启用插件支持的 Codex
+- 本仓库已克隆到本地
+
+### 第一步 — 注册本地插件 marketplace
+
+在 Codex 配置中添加：
+
+```json
+{
+  "plugins": {
+    "marketplaces": [
+      {
+        "url": "file:///Users/yourname/anyharness/.agents/plugins/marketplace.json"
+      }
+    ]
+  }
+}
+```
+
+### 第二步 — 安装插件
+
+```text
+Install the anyharness plugin.
+```
+
+### 第三步 — 直接使用自然语言
 
 ```text
 Use AnyHarness to adopt this repository safely.
 ```
 
-继续使用：
+继续对话：
 
 ```text
 Use AnyHarness to generate project-specific expert review roles.
 Use AnyHarness to review this diff against the project harness.
 Use AnyHarness to create a cross-model review packet.
+```
+
+---
+
+## 首次运行时发生什么
+
+当你让 AnyHarness 接管或初始化项目时，它会按照如下顺序执行，**在你确认之前不会写入任何内容**：
+
+1. **扫描** — 读取项目文件，识别技术栈和 AI workflow 文件
+2. **假设** — 提出领域信号假设，附带证据和置信度
+3. **提问** — 针对你项目的具体规则提 5–12 个聚焦问题
+4. **提案** — 展示将要创建的文件（CLAUDE.md、profile.json 等）
+5. **写入** — 每一步都在你确认后才执行
+
+首次运行示例输出：
+
+```text
+Scan complete. 847 files scanned.
+
+Stack: Node.js, React, PostgreSQL
+AI workflow: CLAUDE.md detected
+
+Domain hypotheses:
+- ecommerce/payment: medium confidence
+  Evidence: src/payment/, src/orders/, docs/checkout.md
+
+Unknowns:
+- Whether payment callbacks can repeat
+- How inventory reservation works
+
+Questions:
+1. Can payment callbacks be delivered more than once?
+2. Is order price frozen at checkout or at payment time?
+3. Is inventory reserved immediately or only after payment?
+
+(Reply to answer. I won't write anything until you confirm.)
 ```
 
 ## 新项目流程
