@@ -54,11 +54,12 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
-  assert(Array.isArray(xp.tools) && xp.tools.length === 11, 'codex plugin.json: must have 11 tools');
+  assert(Array.isArray(xp.tools) && xp.tools.length === 12, 'codex plugin.json: must have 12 tools');
   assert(xp.tools.some(t => t.name === 'anyharness_propose_evolution'), 'codex plugin.json: anyharness_propose_evolution tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_extract_architecture'), 'codex plugin.json: anyharness_extract_architecture tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_derive_risk_topology'), 'codex plugin.json: anyharness_derive_risk_topology tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_analyze'), 'codex plugin.json: anyharness_analyze tool required');
+  assert(xp.tools.some(t => t.name === 'anyharness_suggest_stack_config'), 'codex plugin.json: anyharness_suggest_stack_config tool required');
   for (const tool of xp.tools) {
     assert(typeof tool.sideEffects === 'boolean', `tool ${tool.name}: sideEffects must be boolean`);
     assert(typeof tool.idempotent === 'boolean', `tool ${tool.name}: idempotent must be boolean`);
@@ -453,6 +454,105 @@ try {
     }
   } finally {
     fs.rmSync(tmpExtract, { force: true });
+  }
+}
+
+// ── 12. analyze.mjs: Path C (Python FastAPI + stack-config.json) ─────────────
+
+{
+  const fixtureRoot = path.resolve('test/fixtures/python-fastapi-project');
+  assert(fs.existsSync(fixtureRoot), 'python-fastapi fixture must exist');
+
+  const out = run('node', [script('analyze.mjs'), '--stack', 'auto', '--path', fixtureRoot, '--json']);
+  const report = JSON.parse(out);
+
+  assert(report.stack === 'python-fastapi', `analyze Path C: stack must be python-fastapi, got ${report.stack}`);
+  assert(report.detectedBy === 'user-config', `analyze Path C: detectedBy must be user-config, got ${report.detectedBy}`);
+  assert(report.riskCount >= 5, `analyze Path C: must find >= 5 risks, got ${report.riskCount}`);
+  assert((report.counts.blocker || 0) >= 1, 'analyze Path C: must have >= 1 blocker (subprocess in trust boundary)');
+  assert(report.risks.every(r => Array.isArray(r.evidence) && r.evidence.length > 0),
+    'analyze Path C: all risks must have evidence');
+}
+
+// ── 13. analyze.mjs: Path A via auto-detection (java-spring from pom.xml) ────
+
+{
+  const fixtureRoot = path.resolve('test/fixtures/spring-project');
+
+  const out = run('node', [script('analyze.mjs'), '--stack', 'auto', '--path', fixtureRoot, '--json']);
+  const report = JSON.parse(out);
+
+  assert(report.stack === 'java-spring', `analyze Path A auto: stack must be java-spring, got ${report.stack}`);
+  assert(report.detectedBy === 'auto', `analyze Path A auto: detectedBy must be auto, got ${report.detectedBy}`);
+  assert(report.riskCount >= 6, `analyze Path A auto: must find >= 6 risks, got ${report.riskCount}`);
+  assert((report.counts.blocker || 0) >= 1, 'analyze Path A auto: must have >= 1 blocker');
+}
+
+// ── 14. analyze.mjs: --save flag writes report to .anyharness/reports/ ───────
+
+{
+  const fixtureRoot = path.resolve('test/fixtures/tauri-project');
+  const reportsDir = path.join(fixtureRoot, '.anyharness', 'reports');
+  if (fs.existsSync(reportsDir)) fs.rmSync(reportsDir, { recursive: true, force: true });
+
+  run('node', [script('analyze.mjs'), '--stack', 'auto', '--path', fixtureRoot, '--save', '--json']);
+
+  assert(fs.existsSync(reportsDir), 'analyze --save: .anyharness/reports/ must be created');
+  const files = fs.readdirSync(reportsDir).filter(f => f.startsWith('analysis-') && f.endsWith('.json'));
+  assert(files.length === 1, `analyze --save: must create exactly 1 report, got ${files.length}`);
+
+  const saved = JSON.parse(fs.readFileSync(path.join(reportsDir, files[0]), 'utf8'));
+  assert(saved.stack === 'rust-tauri', `analyze --save: saved report stack must be rust-tauri, got ${saved.stack}`);
+  assert(saved.riskCount >= 5, `analyze --save: saved report must have risks, got ${saved.riskCount}`);
+  assert(typeof saved.generatedAt === 'string', 'analyze --save: report must include generatedAt');
+
+  // Cleanup
+  fs.rmSync(reportsDir, { recursive: true, force: true });
+}
+
+// ── 15. suggest-stack-config.mjs: generates template for unsupported stacks ──
+
+{
+  const tmpPy = fs.mkdtempSync(path.join(os.tmpdir(), 'anyharness-suggest-'));
+  try {
+    // Python + FastAPI: should get a rich Python template
+    fs.writeFileSync(path.join(tmpPy, 'requirements.txt'), 'fastapi==0.104.0\nuvicorn==0.24.0\n');
+
+    const out = run('node', [script('suggest-stack-config.mjs'), '--path', tmpPy]);
+    const config = JSON.parse(out);
+
+    assert(typeof config.stack === 'string', 'suggest-stack-config: must return stack field');
+    assert(config.language === 'python', `suggest-stack-config: language must be python, got ${config.language}`);
+    assert(Array.isArray(config.fileExtensions) && config.fileExtensions.includes('.py'),
+      'suggest-stack-config: fileExtensions must include .py');
+    assert(Array.isArray(config.trustBoundaryMarkers) && config.trustBoundaryMarkers.length > 0,
+      'suggest-stack-config: must return trustBoundaryMarkers');
+    assert(Array.isArray(config.externalCallPatterns) && config.externalCallPatterns.length > 0,
+      'suggest-stack-config: must return externalCallPatterns');
+    assert(config.externalCallPatterns.some(p => p.kind === 'process'),
+      'suggest-stack-config: must include a process-kind external call pattern');
+    assert(config.externalCallPatterns.some(p => p.kind === 'net'),
+      'suggest-stack-config: must include a net-kind external call pattern');
+
+    // --save should write to drafts/
+    const saveOut = run('node', [script('suggest-stack-config.mjs'), '--path', tmpPy, '--save']);
+    const saveResult = JSON.parse(saveOut);
+    assert(saveResult.action === 'drafted', `suggest-stack-config --save: action must be drafted, got ${saveResult.action}`);
+    assert(fs.existsSync(path.join(tmpPy, '.anyharness', 'drafts', 'stack-config.json')),
+      'suggest-stack-config --save: must write draft file');
+
+    // Supported stack should return noop
+    const springTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'anyharness-spring-suggest-'));
+    try {
+      fs.writeFileSync(path.join(springTmp, 'pom.xml'), '<project><dependencies><dependency><groupId>org.springframework.boot</groupId></dependency></dependencies></project>');
+      const noopOut = run('node', [script('suggest-stack-config.mjs'), '--path', springTmp]);
+      const noop = JSON.parse(noopOut);
+      assert(noop.action === 'noop', `suggest-stack-config: supported stack must return noop, got ${noop.action}`);
+    } finally {
+      fs.rmSync(springTmp, { recursive: true, force: true });
+    }
+  } finally {
+    fs.rmSync(tmpPy, { recursive: true, force: true });
   }
 }
 

@@ -329,6 +329,38 @@
       "sideEffects": false,
       "idempotent": true,
       "safeToRetry": true
+    },
+    {
+      "name": "anyharness_suggest_stack_config",
+      "description": "B→C upgrade path: generate a starter .anyharness/stack-config.json for any project that doesn't have a built-in deterministic extractor. Detects language/framework and picks the best matching template (Python/FastAPI, Python/Flask, Python/Django, Go/Gin, Go/Echo, TypeScript/Express, TypeScript/NestJS, Ruby/Rails, and generic fallbacks). WITHOUT --save: prints config JSON to stdout (safe, no writes). WITH --save: writes draft to .anyharness/drafts/stack-config.json. WITH --confirm: writes to .anyharness/stack-config.json (activates Path C for next analyze run). Returns noop JSON if the stack is already supported (Path A) or config already exists (Path C).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Project root. Default: current directory.",
+            "default": "."
+          },
+          "save": {
+            "type": "boolean",
+            "description": "Write draft to .anyharness/drafts/stack-config.json. Default: false (stdout only).",
+            "default": false
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Write directly to .anyharness/stack-config.json (activates Path C). Default: false.",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/suggest-stack-config.mjs --path {path}"
+      },
+      "sideEffects": true,
+      "idempotent": false,
+      "safeToRetry": false
     }
   ]
 }

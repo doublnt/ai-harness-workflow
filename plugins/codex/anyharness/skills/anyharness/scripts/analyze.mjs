@@ -81,6 +81,10 @@ if (extraction.needsLLMAnalysis) {
       console.log('  Detection evidence: ' + extraction.detectionEvidence.join(', '));
       console.log('');
     }
+    console.log('  Tip: run scripts/suggest-stack-config.mjs --path <dir> --save');
+    console.log('       to generate a starter .anyharness/stack-config.json (Path C) for');
+    console.log('       deterministic future analysis without LLM file reading.');
+    console.log('');
   }
   process.exit(0);
 }

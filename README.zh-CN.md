@@ -65,13 +65,38 @@ Scripts 负责辅助。
 
 没有 evolve 循环，AnyHarness 只是一份快照。有了它，harness 变成一个学习系统——每次 review 都能让下一次更准。
 
-## 深度架构分析（支持 4 大技术栈）
+## 深度架构分析
 
-`scan-project.mjs` 只能看文件名和目录结构，看不到架构。这条**深度分析路径**才是真正的 harness engineering：
+`scan-project.mjs` 只能看文件名和目录结构，看不到架构。这条**深度分析路径**才是真正的 harness engineering。
+
+### 一条命令搞定
+
+```bash
+node analyze.mjs --stack auto --path <项目目录>
+```
+
+`--stack auto` 自动从项目文件识别技术栈，然后走对应的分析路径。加 `--save` 可以把完整 JSON 报告写入 `.anyharness/reports/`。
+
+底层管道：
 
 ```text
-extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolution.mjs
-   (解析源码)                     (推导风险边界)                   (写入 profile)
+analyze.mjs  →  extract-architecture.mjs  →  derive-risk-topology.mjs  →  propose-evolution.mjs
+  (入口)             (解析源码)                   (推导风险边界)               (写入 profile)
+```
+
+### 三条分析路径
+
+| 路径 | 触发条件 | 执行方式 |
+|---|---|---|
+| **A — 确定性** | 栈是 java-spring、rust-tauri、csharp-avalonia、cpp-sdk | 内置提取器 + 拓扑规则 → 精确 `file:line` 发现 |
+| **B — LLM 分析** | 任意其他栈 | 文件采样器挑选高价值文件 → 你阅读文件 + 应用 `llm-extractor.md` |
+| **C — 用户配置** | 项目根目录存在 `.anyharness/stack-config.json` | 你的正则规则 + 通用拓扑 → 确定性 |
+
+**B→C 升级路径**：Path B 分析后，运行 `suggest-stack-config.mjs` 可以为你的语言生成一份 `stack-config.json` 模板。编辑并保存后，下次 `analyze.mjs` 就走确定性路径，不需要 LLM 读文件了。
+
+```bash
+node suggest-stack-config.mjs --path <dir> --save    # 生成 draft 到 .anyharness/drafts/
+node suggest-stack-config.mjs --path <dir> --confirm # 直接激活 Path C
 ```
 
 AnyHarness 内置了 4 个技术栈的完整链路（提取器 + 风险拓扑 + 失效模式知识库）：
@@ -127,6 +152,21 @@ AnyHarness 内置了 4 个技术栈的完整链路（提取器 + 风险拓扑 + 
 > 提取器当前是正则实现（PoC 级），未来可换成 tree-sitter / Roslyn / libclang 而不改下游契约。
 > 新增栈只需一个提取器模块 + 一个拓扑规则模块 + 一个知识库文件，见 `references/probe-architecture.md`。
 
+### 任意技术栈（Path B + Path C）
+
+AnyHarness 不只支持上面四个栈——它能分析**任意项目**。
+
+**Path B（LLM 分析）**：`analyze.mjs --stack auto` 可识别 15+ 种技术栈。对于不支持的栈，它会采样最有价值的源文件，并配合 `references/llm-extractor.md` 指引你完成分析。你阅读采样文件，按 7 个通用失效模式生成 Risk[] 发现。
+
+**Path C（确定性配置）**：在项目根目录放一个 `.anyharness/stack-config.json`，无需写代码。为你的栈定义以下正则规则：
+- `trustBoundaryMarkers` — 路由装饰器 / 注解
+- `externalCallPatterns` — 子进程、HTTP、文件 I/O 调用
+- `unsafePatterns` — 危险操作
+- `asyncPatterns` — 异步函数形式
+- `errorSwallowPatterns` — 静默吞掉错误的模式
+
+`analyze.mjs --stack auto` 会自动识别配置文件并走 Path C。Schema 和 Python/FastAPI、Go/Gin、Node/Express 的示例配置见 `references/stack-config-schema.md`。
+
 详见 `references/probe-architecture.md`、`references/universal-failure-modes.md`、`references/stacks/<stack>.md`。
 
 AnyHarness 把 LLM 用在它擅长的地方：
@@ -141,12 +181,19 @@ AnyHarness 把 LLM 用在它擅长的地方：
 
 可选 skill scripts 负责确定性的辅助任务：
 
-- 扫描仓库
-- 收集 diff
-- 写入原生 prompt 文件
-- 写入并校验 profile
-- 生成 review packet
-- 可选安装本地 hooks
+- `analyze.mjs` — 统一架构分析管道（提取 + 拓扑 + 报告）
+- `suggest-stack-config.mjs` — 为 Path C 生成 `stack-config.json` 模板
+- `scan-project.mjs` — 仓库文件扫描
+- `collect-diff.mjs` — git diff 收集
+- `extract-architecture.mjs` — 按栈提取架构
+- `derive-risk-topology.mjs` — 从提取结果推导风险拓扑
+- `sample-for-llm.mjs` — 为不支持的栈采样高价值文件（Path B）
+- `write-native-prompts.mjs` — 生成 CLAUDE.md / AGENTS.md / Cursor 规则
+- `write-profile.mjs` — 写入或草稿 profile
+- `validate-profile.mjs` — 校验 profile JSON
+- `generate-review-packet.mjs` — 跨模型 review packet
+- `propose-evolution.mjs` — 把 learning candidates 合并进 profile
+- `install-local-hooks.mjs` — 可选 Git hooks 和 CI workflow
 
 普通用户不需要全局 CLI。
 
@@ -539,8 +586,8 @@ plugins/
     skills/anyharness/
       SKILL.md                        # Claude skill（标准版）
       SKILL.codex.md                  # Codex overlay 源文件（轻量版，tool 调用视角）
-      references/                     # 11 个 reference 文件（单一数据源）
-      scripts/                        # 7 个确定性辅助脚本
+      references/                     # 14 个 reference 文件（单一数据源）
+      scripts/                        # 13 个确定性辅助脚本
   codex/anyharness/
     .codex-plugin/plugin.json         # Codex 插件清单（含 tools 数组）
     skills/anyharness/

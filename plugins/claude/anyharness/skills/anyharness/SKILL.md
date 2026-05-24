@@ -190,6 +190,7 @@ Load on demand:
 Use scripts only when the client supports tool/bash execution:
 
 - `scripts/analyze.mjs [--stack auto] [--path <dir>] [--save] [--json]` (**recommended** unified entry point)
+- `scripts/suggest-stack-config.mjs [--path <dir>] [--save] [--confirm]` (B→C upgrade: generate starter stack-config.json)
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
 - `scripts/extract-architecture.mjs --stack auto [path]` (extraction only; use analyze.mjs for full pipeline)

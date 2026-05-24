@@ -67,15 +67,44 @@ CLAUDE.md rots; AnyHarness is structured as three connected loops:
 Without the evolve loop, AnyHarness is a snapshot. With it, the harness becomes a
 learning system — every review can make the next one sharper.
 
-## Deep architecture analysis (4 stacks supported)
+## Deep architecture analysis
 
 `scan-project.mjs` only sees filenames and directories — it cannot see the
 architecture. The **deep analysis path** is what real harness engineering looks
-like:
+like.
+
+### One command to run it
+
+```bash
+node analyze.mjs --stack auto --path <project-dir>
+```
+
+`--stack auto` detects the technology stack from project files and takes the right
+path automatically. Add `--save` to write a full JSON report to
+`.anyharness/reports/`.
+
+Under the hood, it runs:
 
 ```text
-extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolution.mjs
-   (parse source)                 (derive risk boundaries)         (write to profile)
+analyze.mjs  →  extract-architecture.mjs  →  derive-risk-topology.mjs  →  propose-evolution.mjs
+  (entry)           (parse source)              (derive risk boundaries)      (write to profile)
+```
+
+### Three analysis paths
+
+| Path | When | What runs |
+|---|---|---|
+| **A — deterministic** | Stack is java-spring, rust-tauri, csharp-avalonia, or cpp-sdk | Built-in extractor + topology rules → exact `file:line` findings |
+| **B — LLM analysis** | Any other stack | File sampler picks high-signal files → you read them + apply `llm-extractor.md` |
+| **C — user config** | `.anyharness/stack-config.json` present | Your regex patterns + universal topology rules → deterministic |
+
+**B→C upgrade:** after Path B analysis, run `suggest-stack-config.mjs` to generate
+a starter `stack-config.json` for your language. Edit it, save it, and next time
+`analyze.mjs` runs deterministically without LLM file reading.
+
+```bash
+node suggest-stack-config.mjs --path <dir> --save   # draft to .anyharness/drafts/
+node suggest-stack-config.mjs --path <dir> --confirm # activate Path C
 ```
 
 AnyHarness ships a complete pipeline (extractor + topology rules + knowledge pack)
@@ -139,6 +168,27 @@ project's real failure modes**, not generic style issues.
 > extractor module + one topology module + one knowledge pack.
 > See `references/probe-architecture.md` for the contract.
 
+### Any stack (Path B + Path C)
+
+AnyHarness works on **any stack** — not just the four listed above.
+
+**Path B (LLM analysis):** `analyze.mjs --stack auto` detects 15+ stacks. For
+unsupported ones, it samples the most relevant source files and prints them with
+guidance from `references/llm-extractor.md`. You read the files and apply the
+7 universal failure modes to produce Risk[] findings.
+
+**Path C (deterministic config):** drop `.anyharness/stack-config.json` in your
+project root — no code required. Define regex patterns for your stack's:
+- `trustBoundaryMarkers` — route decorators / annotations
+- `externalCallPatterns` — subprocess, HTTP, and file I/O calls
+- `unsafePatterns` — dangerous operations
+- `asyncPatterns` — async function forms
+- `errorSwallowPatterns` — silent error swallowing
+
+`analyze.mjs --stack auto` picks up the config automatically. See
+`references/stack-config-schema.md` for the full schema and example configs for
+Python/FastAPI, Go/Gin, and Node/Express.
+
 See `references/probe-architecture.md`, `references/universal-failure-modes.md`, and
 `references/stacks/<stack>.md`.
 
@@ -154,12 +204,19 @@ AnyHarness uses the LLM where it is strongest:
 
 Optional skill scripts handle deterministic support tasks:
 
-- repository scanning
-- diff collection
-- native prompt file writing
-- profile writing and validation
-- review packet generation
-- optional local hook installation
+- `analyze.mjs` — unified architecture analysis pipeline (extract + topology + report)
+- `suggest-stack-config.mjs` — generate a starter `stack-config.json` for Path C
+- `scan-project.mjs` — repository file scan
+- `collect-diff.mjs` — git diff collection
+- `extract-architecture.mjs` — per-stack source extraction
+- `derive-risk-topology.mjs` — risk topology from extraction output
+- `sample-for-llm.mjs` — ranked file sampling for unsupported stacks (Path B)
+- `write-native-prompts.mjs` — generate CLAUDE.md / AGENTS.md / Cursor rules
+- `write-profile.mjs` — write or draft the project harness profile
+- `validate-profile.mjs` — validate profile JSON
+- `generate-review-packet.mjs` — cross-model review packet
+- `propose-evolution.mjs` — merge learning candidates into profile
+- `install-local-hooks.mjs` — optional Git hooks and CI workflow
 
 No global CLI is required for normal usage.
 
@@ -563,8 +620,8 @@ plugins/
     skills/anyharness/
       SKILL.md                        # Claude skill (standard version)
       SKILL.codex.md                  # Codex overlay source (lighter, tool-calling focus)
-      references/                     # 11 reference files (single source of truth)
-      scripts/                        # 7 deterministic helper scripts
+      references/                     # 14 reference files (single source of truth)
+      scripts/                        # 13 deterministic helper scripts
   codex/anyharness/
     .codex-plugin/plugin.json         # Codex plugin manifest (includes tools array)
     skills/anyharness/
