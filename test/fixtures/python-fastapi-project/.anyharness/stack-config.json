@@ -1,0 +1,34 @@
+{
+  "stack": "python-fastapi",
+  "language": "python",
+  "framework": "fastapi",
+  "fileExtensions": [".py"],
+
+  "trustBoundaryMarkers": [
+    { "pattern": "@app\\.(get|post|put|delete|patch)\\b", "description": "FastAPI route on app" },
+    { "pattern": "@router\\.(get|post|put|delete|patch)\\b", "description": "FastAPI APIRouter route" }
+  ],
+
+  "externalCallPatterns": [
+    { "pattern": "subprocess\\.(run|call|check_output|Popen)\\s*\\(", "kind": "process" },
+    { "pattern": "os\\.system\\s*\\(", "kind": "process" },
+    { "pattern": "requests\\.(get|post|put|delete|patch|head)\\s*\\(", "kind": "net" },
+    { "pattern": "httpx\\.(get|post|put|delete|patch)\\s*\\(", "kind": "net" },
+    { "pattern": "aiohttp\\.ClientSession", "kind": "net" },
+    { "pattern": "\\bopen\\s*\\(", "kind": "fs" }
+  ],
+
+  "unsafePatterns": [
+    { "pattern": "ctypes\\.|cffi\\.", "kind": "native-interop" },
+    { "pattern": "eval\\s*\\(|exec\\s*\\(", "kind": "code-injection" }
+  ],
+
+  "asyncPatterns": [
+    { "pattern": "async def\\s+\\w+" }
+  ],
+
+  "errorSwallowPatterns": [
+    { "pattern": "except\\s*:", "description": "bare except (catches all exceptions)" },
+    { "pattern": "except Exception\\s*:", "description": "except Exception without re-raise" }
+  ]
+}

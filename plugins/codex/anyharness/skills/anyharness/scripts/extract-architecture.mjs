@@ -50,10 +50,33 @@ if (stack === 'auto') {
   const { detectStack } = await import(url.pathToFileURL(path.join(here, 'extractors/_detect-stack.mjs')).href);
   const detection = detectStack(root);
 
+  // Path C: user-defined stack-config.json
+  if (detection.isUserConfig) {
+    const { loadConfig, extract: configExtract } = await import(url.pathToFileURL(path.join(here, 'extractors/_config-based.mjs')).href);
+    const config = loadConfig(root);
+    if (!config) { process.stderr.write('stack-config.json found but failed to parse\n'); process.exit(1); }
+    const result = configExtract(root, config);
+    const components = Array.isArray(result.components) ? result.components : [];
+    const out = {
+      stack: result.stack,
+      root: path.relative(process.cwd(), root) || '.',
+      detectedBy: 'user-config',
+      detectionEvidence: detection.evidence,
+      fileCount: result.fileCount ?? 0,
+      componentCount: components.length,
+      components,
+      poc: true,
+      extractionMethod: 'config-based (user-defined patterns)',
+      nextAction: components.length === 0
+        ? 'no_components: no files matched the patterns in .anyharness/stack-config.json'
+        : 'derive_risk_topology: pipe this output into derive-risk-topology.mjs',
+    };
+    console.log(JSON.stringify(out, null, 2));
+    process.exit(0);
+  }
+
+  // Path A: known stack with deterministic extractor
   if (detection.supported && SUPPORTED_STACKS.includes(detection.stack)) {
-    // Re-invoke with the detected stack (fall through to deterministic path below)
-    // by replacing the stack value and continuing execution
-    process.argv[stackIdx + 1] = detection.stack;
     const extractorPath = path.join(here, 'extractors', `${detection.stack}.mjs`);
     let extractor;
     try { extractor = await import(url.pathToFileURL(extractorPath).href); } catch (e) {

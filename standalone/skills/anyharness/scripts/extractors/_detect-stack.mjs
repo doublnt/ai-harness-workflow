@@ -41,6 +41,24 @@ function readFileSafe(p, maxBytes = 8192) {
 export function detectStack(rootDir) {
   const evidence = [];
 
+  // ── Path C: user-defined stack-config.json takes highest priority ─────────
+  const userConfig = path.join(rootDir, '.anyharness', 'stack-config.json');
+  if (fileExists(rootDir, '.anyharness/stack-config.json')) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(userConfig, 'utf8'));
+      return {
+        stack: cfg.stack || 'custom',
+        supported: true,
+        language: cfg.language || null,
+        framework: cfg.framework || null,
+        confidence: 'high',
+        evidence: ['.anyharness/stack-config.json (user-defined)'],
+        configPath: userConfig,
+        isUserConfig: true,
+      };
+    } catch { /* fall through */ }
+  }
+
   // ── Rust + Tauri ───────────────────────────────────────────────────────────
   const cargoToml = path.join(rootDir, 'Cargo.toml');
   const srcTauriCargo = path.join(rootDir, 'src-tauri', 'Cargo.toml');

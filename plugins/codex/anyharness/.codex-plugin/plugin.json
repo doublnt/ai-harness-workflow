@@ -251,8 +251,9 @@
         "properties": {
           "stack": {
             "type": "string",
-            "enum": ["java-spring", "rust-tauri", "csharp-avalonia", "cpp-sdk"],
-            "description": "Stack identifier. Detect from project files: Cargo.toml → rust-tauri; *.csproj with Avalonia → csharp-avalonia; pom.xml/build.gradle with Spring → java-spring; CMakeLists.txt or SDK header structure → cpp-sdk."
+            "enum": ["auto", "java-spring", "rust-tauri", "csharp-avalonia", "cpp-sdk"],
+            "default": "auto",
+            "description": "Stack identifier. Use 'auto' (recommended) to detect from project files. If .anyharness/stack-config.json exists, it takes priority (Path C). Otherwise detects: Cargo.toml+tauri → rust-tauri; *.csproj+Avalonia → csharp-avalonia; pom.xml/build.gradle+Spring → java-spring; CMakeLists.txt+headers → cpp-sdk; unsupported stacks → needsLLMAnalysis: true (Path B)."
           },
           "path": {
             "type": "string",

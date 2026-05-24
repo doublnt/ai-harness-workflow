@@ -32,17 +32,16 @@ try {
   process.exit(1);
 }
 
-if (!SUPPORTED_STACKS.includes(extraction.stack)) {
-  process.stderr.write(JSON.stringify({
-    error: `stack not supported for topology: ${extraction.stack}`,
-    code: 1,
-    supported: SUPPORTED_STACKS,
-  }) + '\n');
-  process.exit(1);
-}
-
 const here = path.dirname(url.fileURLToPath(import.meta.url));
-const topologyPath = path.join(here, 'topology', `${extraction.stack}.mjs`);
+
+// Resolve topology module: per-stack if available, else universal fallback
+let topologyPath;
+if (SUPPORTED_STACKS.includes(extraction.stack)) {
+  topologyPath = path.join(here, 'topology', `${extraction.stack}.mjs`);
+} else {
+  // Path C (config-based) or any unknown stack that produced component data
+  topologyPath = path.join(here, 'topology', '_universal.mjs');
+}
 
 let topology;
 try {
