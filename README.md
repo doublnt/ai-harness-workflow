@@ -278,49 +278,64 @@ You can give that packet to another model and ask it to perform one expert role 
 
 ## Safety model
 
-AnyHarness follows these rules:
+AnyHarness follows ten rules. See `plugins/claude/anyharness/skills/anyharness/references/safety.md` for the full rationale.
 
 1. Installation does not modify a repo.
-2. Scanning happens before writing.
+2. Start with read-only analysis.
 3. Existing prompt files are not overwritten; drafts are generated.
-4. Domain examples are not authoritative.
-5. User confirmation is required before writing profile or enforcement files.
-6. Generated local scripts must be reviewable.
-7. Hard enforcement is optional.
+4. Domain examples are not authoritative rules.
+5. Domain-sensitive conclusions must include evidence and confidence.
+6. Ask focused questions before finalizing invariants.
+7. Keep the first user experience simple.
+8. Do not install hooks without explicit confirmation.
+9. Generated enforcement scripts must be repo-local and reviewable.
+10. Do not read secrets or credentials files.
 
 ## Repository layout
 
 ```text
-.claude-plugin/marketplace.json
-.agents/plugins/marketplace.json
+.claude-plugin/marketplace.json       # Anthropic plugin marketplace entry
+.agents/plugins/marketplace.json      # Codex plugin marketplace entry
 plugins/
   claude/anyharness/
-    .claude-plugin/plugin.json
+    .claude-plugin/plugin.json        # Anthropic plugin manifest (skills array format)
     skills/anyharness/
-      SKILL.md
-      references/
-      scripts/
+      SKILL.md                        # Claude skill (standard version)
+      SKILL.codex.md                  # Codex overlay source (lighter, tool-calling focus)
+      references/                     # 11 reference files (single source of truth)
+      scripts/                        # 7 deterministic helper scripts
   codex/anyharness/
-    .codex-plugin/plugin.json
+    .codex-plugin/plugin.json         # Codex plugin manifest (includes tools array)
     skills/anyharness/
-      SKILL.md
-      references/
-      scripts/
+      SKILL.md                        # ← generated from SKILL.codex.md by sync script
+      references/                     # ← synced from claude source
+      scripts/                        # ← synced from claude source
 standalone/
   skills/anyharness/
-    SKILL.md
-    references/
-    scripts/
-scripts/validate.mjs
-test/run.mjs
+    SKILL.md                          # ← synced from claude source
+    references/                       # ← synced from claude source
+    scripts/                          # ← synced from claude source
+scripts/
+  validate.mjs                        # structural validation
+  sync-distributions.mjs              # single-source sync (with stale file cleanup)
+test/
+  run.mjs
+  fixtures/
+    profile.valid.json
+    profile.invalid.json
 ```
 
-## Development validation
+The `plugins/claude/anyharness/skills/anyharness/` directory is the **single source of truth**.
+All changes must be made there; run `node scripts/sync-distributions.mjs` to propagate to the
+other two distributions. The Codex distribution automatically receives `SKILL.codex.md` as its
+`SKILL.md` (if present), giving it a lighter tool-calling–focused skill file.
 
-This repository includes a validation script for maintainers:
+## Development validation
 
 ```bash
 npm run check
 ```
 
-This is not the user installation path. It only validates the plugin package structure.
+This validates: required files, JSON structure, skill frontmatter, Codex tools schema,
+plugin.json formats, distribution drift, and all behavioral tests. This is not the user
+installation path.

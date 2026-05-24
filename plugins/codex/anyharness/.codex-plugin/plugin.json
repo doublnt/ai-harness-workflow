@@ -16,7 +16,7 @@
     "domain-discovery",
     "project-rules"
   ],
-  "skills": "./skills/",
+  "skills": [{ "name": "anyharness", "path": "./skills/anyharness/", "version": "3.0.0" }],
   "interface": {
     "displayName": "AnyHarness",
     "shortDescription": "Skill-first adaptive engineering harness.",
@@ -25,13 +25,197 @@
     "category": "Developer Tools",
     "capabilities": [
       "Read",
-      "Write"
+      "Write",
+      "Bash"
     ],
     "defaultPrompt": [
-      "Use AnyHarness to adopt this repository safely.",
-      "Use AnyHarness to initialize this new project.",
-      "Use AnyHarness to review the current staged diff.",
-      "Use AnyHarness to create a cross-model review packet."
+      "Use AnyHarness to adopt {{repo_name}} safely.",
+      "Use AnyHarness to initialize {{repo_name}} as a new project.",
+      "Use AnyHarness to review the current diff in {{repo_name}}.",
+      "Use AnyHarness to create a cross-model review packet for {{repo_name}}.",
+      "Use AnyHarness to update {{repo_name}}'s harness after a major architecture change."
     ]
-  }
+  },
+  "tools": [
+    {
+      "name": "anyharness_scan_project",
+      "description": "Scan a repository for stacks, AI workflow files, and domain signals. Read-only; safe to retry. Outputs JSON: sampleFiles, stacks, domainSignals, aiWorkflow, notable, truncated, scanScope.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Repository root to scan. Default: current directory.",
+            "default": "."
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/scan-project.mjs {path}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
+    },
+    {
+      "name": "anyharness_collect_diff",
+      "description": "Collect the current git diff. Outputs JSON: mode, changedFiles, diff, empty. Returns {error, empty:true} on stdout when not in a git repo.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": ["staged", "unstaged", "both"],
+            "description": "Which diff to collect. Default: both.",
+            "default": "both"
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/collect-diff.mjs --mode {mode}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
+    },
+    {
+      "name": "anyharness_write_profile",
+      "description": "Write or draft the project harness profile. Without confirm=true: drafts to .anyharness/drafts/profile.json (safe default). With confirm=true: writes .anyharness/profile.json. Requires overwrite=true if profile.json already exists.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "from_path": {
+            "type": "string",
+            "description": "Optional path to an existing JSON file to use as the seed profile."
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Set true to write .anyharness/profile.json. Default: false (draft only).",
+            "default": false
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "Required when confirm=true and profile.json already exists.",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/write-profile.mjs"
+      },
+      "sideEffects": true,
+      "idempotent": false,
+      "safeToRetry": false
+    },
+    {
+      "name": "anyharness_write_native_prompts",
+      "description": "Write or draft native AI prompt files (CLAUDE.md, AGENTS.md, Cursor rule). Safe by default: creates a draft if the target file already exists instead of overwriting.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": ["claude", "codex", "cursor", "both", "all"],
+            "description": "Which surfaces to write. Default: both (CLAUDE.md + AGENTS.md).",
+            "default": "both"
+          },
+          "profile_path": {
+            "type": "string",
+            "description": "Optional path to profile.json to embed confirmedDomains and invariants in the output."
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/write-native-prompts.mjs --target {target}"
+      },
+      "sideEffects": true,
+      "idempotent": false,
+      "safeToRetry": false
+    },
+    {
+      "name": "anyharness_validate_profile",
+      "description": "Validate a project harness profile JSON against the required schema. Outputs JSON: valid, errors[], nextAction. Exits 1 on failure.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to profile.json. Default: .anyharness/profile.json.",
+            "default": ".anyharness/profile.json"
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/validate-profile.mjs {path}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
+    },
+    {
+      "name": "anyharness_generate_review_packet",
+      "description": "Generate a self-contained cross-model review packet under .anyharness/packets/. Reads profile.json for real gates and invariants. Exits 1 with JSON error if diff is empty. Truncates diff if it exceeds max_diff_kb.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Expert review role name. Default: code-reviewer.",
+            "default": "code-reviewer"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["staged", "unstaged", "both"],
+            "description": "Which diff to include. Default: both.",
+            "default": "both"
+          },
+          "max_diff_kb": {
+            "type": "integer",
+            "description": "Maximum diff size in KB before truncation. Default: 500.",
+            "default": 500
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/generate-review-packet.mjs --role {role} --mode {mode} --max-diff-kb {max_diff_kb}"
+      },
+      "sideEffects": true,
+      "idempotent": false,
+      "safeToRetry": false
+    },
+    {
+      "name": "anyharness_install_local_hooks",
+      "description": "Install local enforcement hooks and CI workflow. WITHOUT confirm=true: dry-run only — lists what would be created, writes nothing. WITH confirm=true: writes .anyharness/scripts/check.mjs, .githooks/pre-commit, .githooks/commit-msg, .github/workflows/anyharness.yml and sets git core.hooksPath.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "description": "Set true to actually install hooks. Default: false (dry-run, safe).",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/install-local-hooks.mjs"
+      },
+      "sideEffects": true,
+      "idempotent": false,
+      "safeToRetry": false
+    }
+  ]
 }

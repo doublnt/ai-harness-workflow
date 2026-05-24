@@ -23,3 +23,10 @@ The Project Harness Profile is generated from repository evidence and user confi
 ## Rule
 
 Do not finalize a critical domain invariant without either repository evidence or user confirmation.
+
+## See also
+
+- `domain-discovery.md` — how to gather evidence and form hypotheses
+- `profile-schema.md` — required fields and types for the output profile JSON
+- `expert-review.md` — schema for the `expertRoles` section of the profile
+- `gate-runtime.md` — how `gates` are enforced at runtime

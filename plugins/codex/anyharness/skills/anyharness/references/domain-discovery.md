@@ -41,3 +41,9 @@ Questions:
 2. Where is signature verification performed?
 3. When is inventory reserved?
 ```
+
+## See also
+
+- `discovery-seeds.md` — domain-specific interview questions for payment, Electron, trading
+- `harness-synthesis.md` — what to do after questions are answered
+- `safety.md` — Rule 4: domain examples are seeds, not authoritative rules

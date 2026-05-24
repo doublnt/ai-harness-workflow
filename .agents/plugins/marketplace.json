@@ -1,0 +1,8 @@
+{
+  "plugins": [
+    {
+      "name": "anyharness",
+      "path": "plugins/codex/anyharness"
+    }
+  ]
+}

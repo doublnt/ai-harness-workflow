@@ -15,5 +15,5 @@
     "domain-discovery",
     "project-rules"
   ],
-  "skills": "./skills/"
+  "skills": [{ "name": "anyharness", "path": "./skills/anyharness/", "version": "3.0.0" }]
 }

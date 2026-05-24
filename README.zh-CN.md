@@ -276,20 +276,59 @@ Use AnyHarness to create a security review packet for the staged diff.
 
 ## 安全模型
 
+AnyHarness 遵循十条规则，完整说明见 `plugins/claude/anyharness/skills/anyharness/references/safety.md`。
+
 1. 安装插件不会修改仓库。
-2. 先扫描，再写入。
+2. 先只读分析，再写入。
 3. 已有 prompt 文件不覆盖，只生成 draft。
 4. 领域示例不是权威规则。
-5. 写入 profile 或 enforcement 文件前必须确认。
-6. 生成的本地 scripts 必须可审查。
-7. 硬门禁是可选的。
+5. 领域相关的结论必须附带证据和置信度。
+6. 最终确定 invariant 之前必须提问。
+7. 保持首次使用体验简单。
+8. 未经明确确认不安装 hooks。
+9. 生成的 enforcement 脚本必须在仓库内可审查。
+10. 不读取 secrets 或 credentials 文件。
+
+## 仓库布局
+
+```text
+.claude-plugin/marketplace.json       # Anthropic 插件 marketplace 入口
+.agents/plugins/marketplace.json      # Codex 插件 marketplace 入口
+plugins/
+  claude/anyharness/
+    .claude-plugin/plugin.json        # Anthropic 插件清单（skills 数组格式）
+    skills/anyharness/
+      SKILL.md                        # Claude skill（标准版）
+      SKILL.codex.md                  # Codex overlay 源文件（轻量版，tool 调用视角）
+      references/                     # 11 个 reference 文件（单一数据源）
+      scripts/                        # 7 个确定性辅助脚本
+  codex/anyharness/
+    .codex-plugin/plugin.json         # Codex 插件清单（含 tools 数组）
+    skills/anyharness/
+      SKILL.md                        # ← 由 sync 脚本从 SKILL.codex.md 生成
+      references/                     # ← 由 sync 脚本同步
+      scripts/                        # ← 由 sync 脚本同步
+standalone/
+  skills/anyharness/
+    SKILL.md                          # ← 由 sync 脚本同步
+    references/                       # ← 由 sync 脚本同步
+    scripts/                          # ← 由 sync 脚本同步
+scripts/
+  validate.mjs                        # 结构校验
+  sync-distributions.mjs              # 单一源同步（含陈旧文件清理）
+test/
+  run.mjs
+  fixtures/
+```
+
+`plugins/claude/anyharness/skills/anyharness/` 是**唯一需要编辑的目录**。
+修改后运行 `node scripts/sync-distributions.mjs` 同步到其他两份分发。
 
 ## 维护者验证
-
-本仓库包含维护者验证脚本：
 
 ```bash
 npm run check
 ```
 
-这不是普通用户安装路径，只用于验证插件包结构。
+验证内容包括：必要文件、JSON 结构、skill frontmatter、Codex tools schema、
+plugin.json 格式、分发同步状态、全部行为测试。这不是普通用户安装路径。

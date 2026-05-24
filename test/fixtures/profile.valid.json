@@ -1,0 +1,17 @@
+{
+  "version": "3.0.0",
+  "project": { "name": "test-project", "stage": "production" },
+  "aiWorkflow": { "claude": true, "codex": false, "cursor": false },
+  "stacks": ["node"],
+  "domainHypotheses": [{ "name": "ecommerce/payment", "confidence": "medium", "evidence": ["src/order.js"] }],
+  "confirmedDomains": ["ecommerce/payment"],
+  "glossary": [{ "term": "Order", "definition": "A customer purchase record." }],
+  "domainModel": { "entities": ["Order", "Customer"], "workflows": ["checkout"], "stateMachines": [] },
+  "invariants": [{ "rule": "Orders must not be deleted, only cancelled.", "severity": "high" }],
+  "riskModel": { "redZones": ["src/payment/"], "yellowZones": [], "escalationRules": [] },
+  "expertRoles": [{ "name": "payment-reviewer", "focus": "payment integrity" }],
+  "gates": [{ "name": "payment-gate", "rule": "No changes to payment processing without two approvals." }],
+  "testOracles": [{ "description": "Every order state transition must be covered by a test." }],
+  "evidenceRequirements": [{ "claim": "Payment is idempotent", "evidence": "test/payment/idempotency.test.js" }],
+  "unknowns": []
+}
