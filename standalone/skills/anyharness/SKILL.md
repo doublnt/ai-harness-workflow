@@ -67,32 +67,56 @@ Full details in `references/operating-model.md`. Summary:
 
 ## Default workflow: deep architecture analysis
 
-Supported stacks: `java-spring`, `rust-tauri`, `csharp-avalonia`, `cpp-sdk`.
+**Always start with `--stack auto`.** It detects the stack automatically and takes
+the right path — deterministic extractor for known stacks, LLM-based analysis for
+everything else. You do not need to identify the stack yourself first.
 
-The architecture extractor reads source code (not filenames) and produces structured
-risk findings with file:line citations, each pre-formatted as a Learning Candidate.
+```
+scripts/extract-architecture.mjs --stack auto [path]
+```
 
-1. Identify the stack from the project (`Cargo.toml` → rust-tauri, `*.csproj` with Avalonia → csharp-avalonia, `pom.xml`/`build.gradle` with Spring → java-spring, `CMakeLists.txt`/SDK header structure → cpp-sdk).
-2. Run extraction: `scripts/extract-architecture.mjs --stack <stack> [path]`.
-3. Pipe to topology: `scripts/derive-risk-topology.mjs [--in path]` (or pipe stdin).
-4. Present risks grouped by severity (blocker → high → medium → low).
-5. For each risk, the `candidate` field can be applied via the evolve workflow.
-6. Ask which findings to apply, then run `propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
+### Path A — supported stack (deterministic)
 
-Use this workflow when the user asks for "architecture analysis", "risk topology",
-"find trust boundaries", or architectural risks in any of the 4 supported stacks.
-For unsupported stacks, fall back to the regular scan + LLM reasoning workflow.
+If the output has `needsLLMAnalysis: false` (or absent), pipe to topology:
 
-Trigger phrases that activate this workflow:
+```
+extract-architecture.mjs --stack auto . | derive-risk-topology.mjs
+```
+
+Present risks grouped by severity (blocker → high → medium → low). Each risk has
+a `candidate` field ready for the evolve workflow. Ask which to apply, then run
+`propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
+
+Supported stacks: `java-spring` (Spring Boot), `rust-tauri` (Tauri desktop),
+`csharp-avalonia` (Avalonia MVVM), `cpp-sdk` (C/C++ SDK).
+
+### Path B — unsupported stack (LLM analysis)
+
+If the output has `needsLLMAnalysis: true`:
+
+1. The output contains `sampledFiles` — a ranked list of high-signal source files.
+2. Read each file using your file-reading tool.
+3. Load `references/llm-extractor.md` for analysis guidance.
+4. Apply the 7 universal failure modes (from `references/universal-failure-modes.md`)
+   to the files you read. Produce findings in the same Risk[] format.
+5. Present findings exactly as in Path A. Same evolve workflow applies.
+
+The LLM analysis is shallower (only sampled files, no cross-file pointer analysis)
+but works on **any stack** — Python/FastAPI, Go/Gin, Node/Express, Electron, etc.
+
+### Trigger phrases
+
+Activate this workflow for any of:
 - "analyze the architecture"
-- "find risk topology"
-- "find trust boundaries in this project"
-- "what are the architectural risks"
-- "analyze this Spring / Tauri / Avalonia / C++ SDK project"
+- "find risk topology / trust boundaries / failure modes"
+- "what are the architectural risks in this project"
+- "analyze this [any stack] project"
+- "find security issues in this codebase"
 
-See `references/probe-architecture.md` for the extractor contract and how to add new stacks.
+See `references/probe-architecture.md` for the extractor contract and how to add stacks.
 See `references/universal-failure-modes.md` for cross-stack concepts.
-See `references/stacks/<stack>.md` for per-stack failure modes and safe patterns.
+See `references/llm-extractor.md` for the LLM analysis guide (Path B).
+See `references/stacks/<stack>.md` for per-stack failure modes (Path A).
 
 ## Default workflow: evolve harness from review
 
@@ -125,7 +149,7 @@ Load on demand:
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
 - Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
-- Architecture analysis → `references/probe-architecture.md`, `references/universal-failure-modes.md`, `references/architecture-extraction.md`, `references/risk-topology.md`, `references/stacks/<stack>.md`
+- Architecture analysis → `references/probe-architecture.md`, `references/universal-failure-modes.md`, `references/llm-extractor.md`, `references/stacks/<stack>.md`
 - Gates / enforcement → `references/gate-runtime.md`
 - Writing files → `references/native-prompt-surfaces.md`
 
@@ -137,6 +161,7 @@ Load on demand:
 - `references/harness-synthesis.md` — profile synthesis rules
 - `references/harness-evolution.md` — learning candidates and the review→evolve loop
 - `references/probe-architecture.md` — probe architecture design: extractor + topology contracts, how to add stacks
+- `references/llm-extractor.md` — LLM analysis guide for unsupported stacks (Path B output format, per-failure-mode detection patterns)
 - `references/universal-failure-modes.md` — 7 cross-stack failure mode concepts
 - `references/architecture-extraction.md` — deep architecture extraction design
 - `references/risk-topology.md` — converting extraction into risk findings
@@ -158,7 +183,9 @@ Use scripts only when the client supports tool/bash execution:
 
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
-- `scripts/extract-architecture.mjs --stack <java-spring|rust-tauri|csharp-avalonia|cpp-sdk> [path]`
+- `scripts/extract-architecture.mjs --stack auto [path]` (auto-detect; recommended default)
+- `scripts/extract-architecture.mjs --stack <java-spring|rust-tauri|csharp-avalonia|cpp-sdk> [path]` (explicit)
+- `scripts/sample-for-llm.mjs [--root path] [--max-files n]` (file sampling for unsupported stacks)
 - `scripts/derive-risk-topology.mjs [--in path]` (or pipe from extract-architecture)
 - `scripts/write-profile.mjs [--from path] [--confirm] [--overwrite]`
 - `scripts/write-native-prompts.mjs [--target claude|codex|cursor|both|all] [--profile path]`
