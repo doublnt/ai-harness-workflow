@@ -65,6 +65,35 @@ Scripts 负责辅助。
 
 没有 evolve 循环，AnyHarness 只是一份快照。有了它，harness 变成一个学习系统——每次 review 都能让下一次更准。
 
+## 深度架构分析（PoC：java-spring）
+
+`scan-project.mjs` 只能看文件名和目录结构，看不到架构。这条**深度分析路径**才是真正的 harness engineering：
+
+```text
+extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolution.mjs
+   (解析源码)                     (推导风险边界)                   (写入 profile)
+```
+
+对支持的栈（目前是 **java-spring**），AnyHarness 会：
+
+1. 解析 `.java` 源码（不是文件名扫描）——识别 controller / service / repository / entity、`@Transactional` 方法（含 propagation）、Kafka send/listener、外部 HTTP 调用、`this.x()` self-invocation、JPA `@Query` 修改语句等
+2. 把这些结构化数据交给 **风险拓扑层**——识别真正的失败模式：
+   - **dual-write**：`@Transactional` 方法里又 send Kafka（DB 提交和消息发送不一致）
+   - **tx-self-invocation**：`this.foo()` 绕过 Spring 代理，`@Transactional` 静默失效
+   - **missing-modifying**：`@Query` 写语句没加 `@Modifying`（运行时静默失败）
+   - **kafka-no-idempotency**：at-least-once 投递必须幂等
+   - **requires-new-pool**：`REQUIRES_NEW` 在并发下耗尽连接池
+   - **external-no-retry**：外部 HTTP 调用没有超时/熔断/重试
+   - **trust-boundary**：HTTP 端点未校验输入
+3. 每个发现都带：`file:line` 引用、严重等级、**预制的 Learning Candidate**——可以直接喂给 evolve 循环写进 profile。
+
+这是和"通用代码 review checklist"的本质区别——结构化提取 + 栈特定知识库 = 找到的是**这一类项目的真实风险**，不是泛泛的代码风格问题。
+
+> 目前只有 java-spring 一栈走通了完整链路。其他栈仍然走 `scan-project.mjs` + LLM 推理（浅层）。后续会按相同契约加更多栈（node-express、go-stdlib 等）。
+> 提取器当前是正则实现（PoC 级），未来可换成 tree-sitter / javaparser 而不改下游契约。
+
+详见 `references/architecture-extraction.md`、`references/risk-topology.md`、`references/stacks/java-spring.md`。
+
 AnyHarness 把 LLM 用在它擅长的地方：
 
 - 阅读项目上下文

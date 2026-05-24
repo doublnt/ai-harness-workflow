@@ -54,8 +54,10 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
-  assert(Array.isArray(xp.tools) && xp.tools.length === 8, 'codex plugin.json: must have 8 tools');
+  assert(Array.isArray(xp.tools) && xp.tools.length === 10, 'codex plugin.json: must have 10 tools');
   assert(xp.tools.some(t => t.name === 'anyharness_propose_evolution'), 'codex plugin.json: anyharness_propose_evolution tool required');
+  assert(xp.tools.some(t => t.name === 'anyharness_extract_architecture'), 'codex plugin.json: anyharness_extract_architecture tool required');
+  assert(xp.tools.some(t => t.name === 'anyharness_derive_risk_topology'), 'codex plugin.json: anyharness_derive_risk_topology tool required');
   for (const tool of xp.tools) {
     assert(typeof tool.sideEffects === 'boolean', `tool ${tool.name}: sideEffects must be boolean`);
     assert(typeof tool.idempotent === 'boolean', `tool ${tool.name}: idempotent must be boolean`);
@@ -334,6 +336,123 @@ try {
     assert(retiredProfile.invariants.length === 1, 'propose-evolution: retired invariant must reduce count');
   } finally {
     fs.rmSync(tmpEv, { recursive: true, force: true });
+  }
+}
+
+// ── 11. extract-architecture.mjs + derive-risk-topology.mjs (Spring PoC) ─────
+
+{
+  const fixtureRoot = path.resolve('test/fixtures/spring-project');
+  assert(fs.existsSync(fixtureRoot), 'spring fixture must exist');
+
+  // ── extract-architecture ─────────────────────────────────────────────────
+  const extractOut = run('node', [script('extract-architecture.mjs'), '--stack', 'java-spring', fixtureRoot]);
+  const extraction = JSON.parse(extractOut);
+  assert(extraction.stack === 'java-spring', 'extract-architecture: stack must be java-spring');
+  assert(extraction.componentCount >= 6, `extract-architecture: must find at least 6 components, got ${extraction.componentCount}`);
+
+  const byClass = Object.fromEntries(extraction.components.map(c => [c.class, c]));
+
+  // Controller
+  const controller = byClass['com.example.controller.OrderController'];
+  assert(controller && controller.kind === 'controller', 'extract: OrderController must be a controller');
+  assert(controller.basePath === '/api/orders', 'extract: controller basePath must be /api/orders');
+  assert(controller.endpoints && controller.endpoints.length === 2, `extract: controller must have 2 endpoints, got ${controller.endpoints?.length}`);
+  assert(controller.endpoints.some(e => e.path === '/api/orders/{id}/confirm' && e.method === 'POST'),
+    'extract: confirm endpoint must be POST /api/orders/{id}/confirm');
+
+  // Service with transactions, kafka send, and self-invocation
+  const svc = byClass['com.example.service.OrderService'];
+  assert(svc && svc.kind === 'service', 'extract: OrderService must be a service');
+  assert(svc.transactionalMethods && svc.transactionalMethods.length === 3,
+    `extract: OrderService must have 3 @Transactional methods, got ${svc.transactionalMethods?.length}`);
+  assert(svc.transactionalMethods.some(t => t.method === 'recordAudit' && t.propagation === 'REQUIRES_NEW'),
+    'extract: recordAudit must have propagation=REQUIRES_NEW');
+  assert(svc.kafkaSends && svc.kafkaSends.some(k => k.topic === 'orders.created' && k.method === 'placeOrder'),
+    'extract: orders.created send must be in placeOrder');
+  assert(svc.selfInvocations && svc.selfInvocations.some(si => si.caller === 'confirmOrder' && si.callee === 'markPaid'),
+    'extract: confirmOrder must self-invoke markPaid');
+  assert(svc.dependencies && svc.dependencies.includes('KafkaTemplate'),
+    'extract: KafkaTemplate generic must parse correctly as a dependency');
+
+  // Repository with missing @Modifying
+  const repo = byClass['com.example.repository.OrderRepository'];
+  assert(repo && repo.kind === 'repository', 'extract: OrderRepository must be a repository');
+  assert(repo.modifyingIssues && repo.modifyingIssues.length === 1,
+    'extract: OrderRepository must flag missing @Modifying');
+
+  // Kafka listener
+  const consumer = byClass['com.example.service.OrderEventConsumer'];
+  assert(consumer.kafkaListeners && consumer.kafkaListeners.length === 1,
+    'extract: OrderEventConsumer must have a KafkaListener');
+
+  // External call
+  const gw = byClass['com.example.external.PaymentGatewayClient'];
+  assert(gw.externalCalls && gw.externalCalls.some(ec => ec.client === 'RestTemplate'),
+    'extract: PaymentGatewayClient must have a RestTemplate call');
+
+  // Entity
+  const entity = byClass['com.example.entity.Order'];
+  assert(entity && entity.kind === 'entity', 'extract: Order must be an entity');
+  assert(entity.table === 'orders', 'extract: Order must have table=orders');
+
+  // ── unsupported stack must error ─────────────────────────────────────────
+  const unsupported = assertExitCode('node', [script('extract-architecture.mjs'), '--stack', 'node-express'], 1);
+  assert(unsupported.stderr.includes('not supported'), 'extract: unsupported stack must error');
+
+  // ── derive-risk-topology ─────────────────────────────────────────────────
+  const tmpExtract = path.join(os.tmpdir(), `anyharness-extract-${Date.now()}.json`);
+  fs.writeFileSync(tmpExtract, extractOut);
+  try {
+    const topoOut = run('node', [script('derive-risk-topology.mjs'), '--in', tmpExtract]);
+    const topo = JSON.parse(topoOut);
+    assert(topo.riskCount >= 6, `topology: must find at least 6 risks, got ${topo.riskCount}`);
+
+    const kinds = new Set(topo.risks.map(r => r.kind));
+    assert(kinds.has('dual-write'), 'topology: must detect dual-write');
+    assert(kinds.has('tx-self-invocation'), 'topology: must detect tx-self-invocation');
+    assert(kinds.has('missing-modifying'), 'topology: must detect missing-modifying');
+    assert(kinds.has('kafka-no-idempotency'), 'topology: must detect kafka-no-idempotency');
+    assert(kinds.has('requires-new-pool'), 'topology: must detect requires-new-pool');
+    assert(kinds.has('external-no-retry-hint'), 'topology: must detect external-no-retry-hint');
+
+    assert(topo.counts.blocker >= 1, 'topology: missing-modifying must be a blocker');
+    assert(topo.counts.high >= 3, 'topology: must have >= 3 high severity findings');
+
+    // Every risk must have evidence with file:line and a Learning Candidate
+    for (const r of topo.risks) {
+      assert(Array.isArray(r.evidence) && r.evidence.length > 0, `topology: ${r.kind} must have evidence`);
+      assert(r.evidence.every(e => /:\d+$/.test(e)), `topology: ${r.kind} evidence must have file:line`);
+      assert(r.candidate && typeof r.candidate.type === 'string',
+        `topology: ${r.kind} must have a Learning Candidate`);
+    }
+
+    // ── Round-trip: feed topology candidates into propose-evolution ──────
+    const evRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'anyharness-topo-evolve-'));
+    try {
+      const profilePath = path.join(evRoot, '.anyharness', 'profile.json');
+      fs.mkdirSync(path.dirname(profilePath), { recursive: true });
+      fs.writeFileSync(profilePath, JSON.stringify({
+        version: '3.0.0', project: { name: 'topo-test', stage: 'Unknown' }, aiWorkflow: {},
+        stacks: ['java'], domainHypotheses: [], confirmedDomains: [], glossary: [],
+        domainModel: { entities: [], workflows: [], stateMachines: [] },
+        invariants: [], riskModel: { redZones: [], yellowZones: [], escalationRules: [] },
+        expertRoles: [], gates: [], testOracles: [], evidenceRequirements: [], unknowns: [],
+      }, null, 2));
+
+      const candidates = topo.risks.map(r => r.candidate);
+      const findingsPath = path.join(evRoot, 'findings.json');
+      fs.writeFileSync(findingsPath, JSON.stringify({ trigger: 'topology', candidates }));
+      const evolveOut = run('node', [script('propose-evolution.mjs'), '--findings', findingsPath, '--confirm'], { cwd: evRoot });
+      const evolved = JSON.parse(evolveOut);
+      assert(evolved.action === 'evolved', 'topology→evolution round-trip: must succeed');
+      assert(evolved.accepted.added + evolved.accepted.newUnknowns + evolved.accepted.newGates >= 5,
+        'topology→evolution round-trip: must accept multiple candidates');
+    } finally {
+      fs.rmSync(evRoot, { recursive: true, force: true });
+    }
+  } finally {
+    fs.rmSync(tmpExtract, { force: true });
   }
 }
 

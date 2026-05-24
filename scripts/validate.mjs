@@ -68,6 +68,7 @@ const requiredTools = [
   'anyharness_write_native_prompts', 'anyharness_validate_profile',
   'anyharness_generate_review_packet', 'anyharness_install_local_hooks',
   'anyharness_propose_evolution',
+  'anyharness_extract_architecture', 'anyharness_derive_risk_topology',
 ];
 const toolNames = codexPlugin.tools.map(t => t.name);
 const missingTools = requiredTools.filter(n => !toolNames.includes(n));

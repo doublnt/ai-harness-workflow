@@ -25,6 +25,8 @@ Activate for any of these user intents (exact wording is not required):
 - set up AI coding gates
 - evolve the harness from this review / apply learnings to the profile
 - what should we add to the profile based on this review
+- analyze the architecture / risk topology of this codebase
+- find architectural risks in this Spring project
 
 ## Non-negotiable rules
 
@@ -62,6 +64,26 @@ Full details in `references/operating-model.md`. Summary:
 5. Output per `references/output-contract.md`: Summary → Roles → Blockers → Needs Changes → Suggestions → Unknowns → Evidence → Verdict → **Learning Candidates**.
 6. If Learning Candidates were produced, ask the user: *"Apply any of these to the profile?"* and only proceed to the evolve workflow on agreement.
 
+## Default workflow: deep architecture analysis
+
+For supported stacks (currently `java-spring`), use the architecture extractor +
+risk topology derivation. This produces structured risk findings with citations,
+each pre-formatted as a Learning Candidate ready for the evolve loop.
+
+1. Run extraction: `scripts/extract-architecture.mjs --stack java-spring [path]`.
+2. Pipe to topology: `scripts/derive-risk-topology.mjs --in <extraction.json>` (or pipe via stdin).
+3. Present risks to the user grouped by severity (blocker / high / medium / low).
+4. For each risk, the `candidate` field can be applied via the evolve workflow.
+5. Ask which findings to apply, then run `propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
+
+Use this workflow when the user asks for "architecture analysis", "risk topology",
+or wants to find architectural risks in a Spring project. For other stacks, the
+extractor will error — fall back to the regular scan + LLM reasoning workflow.
+
+See `references/architecture-extraction.md` and `references/risk-topology.md`
+for the design. See `references/stacks/java-spring.md` for the failure modes
+the topology layer reasons over.
+
 ## Default workflow: evolve harness from review
 
 This is the feedback loop that keeps the profile alive (see `references/harness-evolution.md`).
@@ -93,6 +115,7 @@ Load on demand:
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
 - Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
+- Architecture analysis → `references/architecture-extraction.md`, `references/risk-topology.md`, `references/stacks/<stack>.md`
 - Gates / enforcement → `references/gate-runtime.md`
 - Writing files → `references/native-prompt-surfaces.md`
 
@@ -103,6 +126,9 @@ Load on demand:
 - `references/discovery-seeds.md` — domain interview seeds (payment / electron / trading)
 - `references/harness-synthesis.md` — profile synthesis rules
 - `references/harness-evolution.md` — learning candidates and the review→evolve loop
+- `references/architecture-extraction.md` — deep architecture extraction (PoC: java-spring)
+- `references/risk-topology.md` — converting extraction into risk findings
+- `references/stacks/java-spring.md` — Spring failure mode knowledge pack
 - `references/expert-review.md` — expert role schema and review output format
 - `references/review-packet.md` — packet contents and prompt rules
 - `references/gate-runtime.md` — optional local enforcement files
@@ -117,6 +143,8 @@ Use scripts only when the client supports tool/bash execution:
 
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
+- `scripts/extract-architecture.mjs --stack java-spring [path]`
+- `scripts/derive-risk-topology.mjs [--in path]` (or pipe from extract-architecture)
 - `scripts/write-profile.mjs [--from path] [--confirm] [--overwrite]`
 - `scripts/write-native-prompts.mjs [--target claude|codex|cursor|both|all] [--profile path]`
 - `scripts/validate-profile.mjs [path]`

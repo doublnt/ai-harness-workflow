@@ -68,28 +68,42 @@ const skillSrcPath = path.join(root, src, 'SKILL.md');
 const skillCodexOverridePath = path.join(root, src, 'SKILL.codex.md');
 const hasCodexOverride = fs.existsSync(skillCodexOverridePath);
 
+// Recursively walk a directory, returning entries relative to base.
+function walk(base, prefix = '') {
+  const out = [];
+  if (!fs.existsSync(base)) return out;
+  for (const entry of fs.readdirSync(base, { withFileTypes: true })) {
+    const rel = prefix ? path.join(prefix, entry.name) : entry.name;
+    if (entry.isDirectory()) {
+      out.push(...walk(path.join(base, entry.name), rel));
+    } else if (entry.isFile()) {
+      out.push(rel);
+    }
+  }
+  return out;
+}
+
 for (const target of targets) {
   // Sync SKILL.md (use codex override if applicable)
   const skillSrc = (target.codexOverlay && hasCodexOverride) ? skillCodexOverridePath : skillSrcPath;
   syncFile(skillSrc, path.join(root, target.path, 'SKILL.md'));
 
-  // Sync reference and script directories
+  // Sync reference and script directories (recursive)
   for (const dir of syncDirs) {
     const srcDir = path.join(root, src, dir);
     if (!fs.existsSync(srcDir)) continue;
-    const srcEntries = new Set(fs.readdirSync(srcDir));
+    const srcEntries = walk(srcDir).filter(e => e !== 'SKILL.codex.md');
+    const srcSet = new Set(srcEntries);
 
     for (const entry of srcEntries) {
-      // Skip SKILL.codex.md — it's the overlay source, not a reference file
-      if (entry === 'SKILL.codex.md') continue;
       syncFile(path.join(srcDir, entry), path.join(root, target.path, dir, entry));
     }
 
-    // Check for stale files in the target
+    // Check for stale files in the target (recursive)
     const dstDir = path.join(root, target.path, dir);
     if (fs.existsSync(dstDir)) {
-      for (const entry of fs.readdirSync(dstDir)) {
-        if (!srcEntries.has(entry)) {
+      for (const entry of walk(dstDir)) {
+        if (!srcSet.has(entry)) {
           deleteStale(path.join(dstDir, entry));
         }
       }

@@ -67,6 +67,52 @@ CLAUDE.md rots; AnyHarness is structured as three connected loops:
 Without the evolve loop, AnyHarness is a snapshot. With it, the harness becomes a
 learning system — every review can make the next one sharper.
 
+## Deep architecture analysis (PoC: java-spring)
+
+`scan-project.mjs` only sees filenames and directories — it cannot see the
+architecture. The **deep analysis path** is what real harness engineering looks
+like:
+
+```text
+extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolution.mjs
+   (parse source)                 (derive risk boundaries)         (write to profile)
+```
+
+For supported stacks (currently **java-spring**), AnyHarness will:
+
+1. Parse `.java` sources (not filename scanning) — identifying controllers,
+   services, repositories, entities, `@Transactional` methods with propagation,
+   Kafka sends/listeners, external HTTP calls, `this.x()` self-invocations,
+   JPA `@Query` mutations, etc.
+2. Feed the structured extraction to a **risk topology layer** that identifies
+   real failure modes:
+   - **dual-write**: `@Transactional` method also sending to Kafka (DB commit and
+     publish are independent — partial failure leaves the system inconsistent)
+   - **tx-self-invocation**: `this.foo()` bypasses the Spring proxy; `@Transactional`
+     silently does nothing
+   - **missing-modifying**: `@Query` UPDATE/DELETE without `@Modifying` —
+     silent runtime failure
+   - **kafka-no-idempotency**: at-least-once delivery requires idempotent handlers
+   - **requires-new-pool**: `REQUIRES_NEW` under load can exhaust the connection pool
+   - **external-no-retry**: external HTTP calls without visible timeout / circuit-breaker
+   - **trust-boundary**: HTTP endpoints accepting input without `@Valid`
+3. Each finding includes a `file:line` citation, severity, and a
+   **pre-formatted Learning Candidate** that can be fed directly into the
+   evolve loop to write the rule into the project profile.
+
+This is what separates AnyHarness from a generic review checklist: structured
+extraction + stack-specific knowledge produces findings about **this kind of
+project's real failure modes**, not generic style issues.
+
+> The full pipeline currently exists only for `java-spring`. Other stacks still
+> use `scan-project.mjs` + LLM reasoning (shallow). More stacks will be added
+> under the same contract (`node-express`, `go-stdlib`, etc.).
+> The current extractor is regex-based (PoC quality); a future iteration can
+> swap in tree-sitter or javaparser without changing the downstream contract.
+
+See `references/architecture-extraction.md`, `references/risk-topology.md`, and
+`references/stacks/java-spring.md`.
+
 AnyHarness uses the LLM where it is strongest:
 
 - reading project context

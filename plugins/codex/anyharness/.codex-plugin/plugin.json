@@ -242,6 +242,55 @@
       "sideEffects": true,
       "idempotent": true,
       "safeToRetry": true
+    },
+    {
+      "name": "anyharness_extract_architecture",
+      "description": "Extract a structured architecture model from a codebase (PoC: --stack java-spring only). Outputs components with kind (controller/service/repository/component/entity), HTTP endpoints, @Transactional methods with propagation, Kafka send/listener bindings, external HTTP calls, self-invocations bypassing the Spring proxy, and @Query update statements missing @Modifying. Read-only; safe to retry.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "stack": {
+            "type": "string",
+            "enum": ["java-spring"],
+            "description": "Stack identifier. PoC supports java-spring only.",
+            "default": "java-spring"
+          },
+          "path": {
+            "type": "string",
+            "description": "Project root to scan. Default: current directory.",
+            "default": "."
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/extract-architecture.mjs --stack {stack} {path}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
+    },
+    {
+      "name": "anyharness_derive_risk_topology",
+      "description": "Convert an architecture extraction (from anyharness_extract_architecture) into structured risk findings with severity, file:line citations, and pre-formatted Learning Candidates ready for anyharness_propose_evolution. Detects dual-write, @Transactional self-invocation, REQUIRES_NEW pool risk, missing @Modifying, Kafka listener idempotency, external call retry/circuit-breaker gaps, and trust-boundary endpoints. Read-only.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "findings_path": {
+            "type": "string",
+            "description": "Path to a JSON file produced by anyharness_extract_architecture."
+          }
+        },
+        "required": ["findings_path"]
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/derive-risk-topology.mjs --in {findings_path}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
     }
   ]
 }

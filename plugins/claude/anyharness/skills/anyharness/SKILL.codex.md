@@ -21,6 +21,8 @@ Each tool maps directly to a script in this plugin's `scripts/` directory.
 - `anyharness_generate_review_packet` writes to `.anyharness/packets/`. Check `diffTruncated` in the result.
 - `anyharness_install_local_hooks` defaults to dry-run (`confirm=false`). Only set `confirm=true` after the user explicitly asks to install hooks.
 - `anyharness_propose_evolution` defaults to draft mode (`confirm=false`). Only set `confirm=true` after the user explicitly approves applying review findings to the profile.
+- `anyharness_extract_architecture` is always safe — read-only. Only `--stack java-spring` is supported in this PoC; other stacks return an error.
+- `anyharness_derive_risk_topology` is always safe — read-only. Pass the extraction JSON via `findings_path`.
 
 ## Non-negotiable rules
 
@@ -56,6 +58,14 @@ Each tool maps directly to a script in this plugin's `scripts/` directory.
 3. Show the diff (added/refined/retired invariants, new unknowns/gates) and skipped duplicates.
 4. After user confirms, call `anyharness_propose_evolution` with `confirm=true` to merge into `.anyharness/profile.json` and append a `learningHistory` entry.
 
+### Deep architecture analysis (java-spring PoC)
+
+1. Call `anyharness_extract_architecture` with `stack=java-spring` and the project path. Save the JSON output.
+2. Call `anyharness_derive_risk_topology` with the extraction file path. This returns structured risks with severity, citations, and pre-formatted Learning Candidates.
+3. Present risks grouped by severity (blocker / high / medium / low) with citations.
+4. Ask the user which Learning Candidates to apply.
+5. Build a findings JSON from the agreed candidates and call `anyharness_propose_evolution` (draft → confirm) to merge into the profile.
+
 ### Generate a cross-model review packet
 
 1. Call `anyharness_collect_diff` to confirm diff is non-empty.
@@ -75,4 +85,5 @@ Load on demand:
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
 - Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
+- Architecture analysis → `references/architecture-extraction.md`, `references/risk-topology.md`, `references/stacks/<stack>.md`
 - Gates → `references/gate-runtime.md`
