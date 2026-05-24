@@ -100,50 +100,177 @@ If you enable hard enforcement, it can generate repo-local files:
 
 These are generated only after explicit confirmation.
 
-## Quick start: Claude Code
+## Getting started: Claude Code
 
-1. Add this repository as a Claude plugin marketplace.
-2. Install the `anyharness` plugin.
-3. Run:
+### Prerequisites
+
+- [Claude Code](https://claude.ai/code) installed (CLI or desktop app)
+- Node.js 18 or later
+- This repository cloned locally:
+
+```bash
+git clone https://github.com/your-org/anyharness.git ~/anyharness
+# or wherever you prefer
+```
+
+### Step 1 — Register as a local plugin marketplace
+
+Open (or create) your Claude Code user settings file:
+
+```bash
+# macOS / Linux
+~/.claude/settings.json
+
+# Windows
+%APPDATA%\Claude\settings.json
+```
+
+Add the `plugins` section (merge with existing content if the file already exists):
+
+```json
+{
+  "plugins": {
+    "marketplaces": [
+      {
+        "url": "file:///Users/yourname/anyharness/.claude-plugin/marketplace.json"
+      }
+    ]
+  }
+}
+```
+
+> Replace `/Users/yourname/anyharness` with the actual path where you cloned this repo.
+> You can verify the path with `pwd` inside the cloned directory.
+
+### Step 2 — Install the plugin
+
+In Claude Code, run:
+
+```text
+/plugins install anyharness
+```
+
+Or open the plugin marketplace UI, find **anyharness**, and click Install.
+
+### Step 3 — Verify installation
+
+```text
+/anyharness:anyharness
+```
+
+You should see AnyHarness respond and ask what you'd like to do.
+
+### Step 4 — Use it on your project
+
+Open (or `cd` into) the project you want to analyze. Then:
+
+**Adopt an existing project:**
 
 ```text
 /anyharness:anyharness adopt this repository safely
 ```
 
-For a new project:
+**Initialize a new project:**
 
 ```text
 /anyharness:anyharness initialize this new project
 ```
 
-For review:
+**Review staged changes:**
 
 ```text
 /anyharness:anyharness review the current staged diff
 ```
 
-For cross-model review:
+**Generate a cross-model review packet:**
 
 ```text
 /anyharness:anyharness create a security review packet for the staged diff
 ```
 
-## Quick start: Codex
+AnyHarness will guide you through the rest interactively — scanning, asking questions,
+and confirming before writing any files.
 
-1. Add this repository as a Codex plugin marketplace.
-2. Install the `anyharness` plugin.
-3. Use natural language:
+---
+
+## Getting started: Codex
+
+### Prerequisites
+
+- Codex with plugin support enabled
+- This repository cloned or accessible locally
+
+### Step 1 — Register as a local plugin marketplace
+
+In your Codex configuration, add:
+
+```json
+{
+  "plugins": {
+    "marketplaces": [
+      {
+        "url": "file:///Users/yourname/anyharness/.agents/plugins/marketplace.json"
+      }
+    ]
+  }
+}
+```
+
+### Step 2 — Install the plugin
+
+```text
+Install the anyharness plugin.
+```
+
+### Step 3 — Use natural language
 
 ```text
 Use AnyHarness to adopt this repository safely.
 ```
 
-Then continue:
+Then continue the conversation:
 
 ```text
 Use AnyHarness to generate project-specific expert review roles.
 Use AnyHarness to review this diff against the project harness.
 Use AnyHarness to create a cross-model review packet.
+```
+
+---
+
+## What happens during first run
+
+When you ask AnyHarness to adopt or initialize a project, it follows this sequence
+**without writing anything until you confirm**:
+
+1. **Scan** — reads your project files, detects stack and AI workflow files
+2. **Hypothesize** — proposes domain signals with evidence and confidence levels
+3. **Ask** — poses 5–12 focused questions about your project's specific rules
+4. **Propose** — shows what files it would create (CLAUDE.md, profile.json, etc.)
+5. **Write** — only writes after you confirm each step
+
+Example first-run output:
+
+```text
+Scan complete. 847 files scanned.
+
+Stack: Node.js, React, PostgreSQL
+AI workflow: CLAUDE.md detected
+
+Domain hypotheses:
+- ecommerce/payment: medium confidence
+  Evidence: src/payment/, src/orders/, docs/checkout.md
+
+Unknowns:
+- Whether payment callbacks can repeat
+- How inventory reservation works
+
+Questions:
+1. Can payment callbacks be delivered more than once?
+2. Is order price frozen at checkout or at payment time?
+3. Is inventory reserved immediately or only after payment?
+
+(Reply to answer. I won't write anything until you confirm.)
 ```
 
 ## New project workflow
