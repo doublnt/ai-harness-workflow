@@ -291,6 +291,44 @@
       "sideEffects": false,
       "idempotent": true,
       "safeToRetry": true
+    },
+    {
+      "name": "anyharness_analyze",
+      "description": "Unified analysis pipeline: auto-detect stack → extract architecture → derive risk topology → human-readable severity report. For supported stacks (java-spring, rust-tauri, csharp-avalonia, cpp-sdk) or user-configured stacks (.anyharness/stack-config.json), runs fully deterministic. For unsupported stacks, emits sampled file list for LLM-based analysis (Path B). Use --save to persist JSON report to .anyharness/reports/. Use --json for machine-readable output. Read-only except when --save is passed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "stack": {
+            "type": "string",
+            "enum": ["auto", "java-spring", "rust-tauri", "csharp-avalonia", "cpp-sdk"],
+            "default": "auto",
+            "description": "Stack identifier. Default: auto (recommended)."
+          },
+          "path": {
+            "type": "string",
+            "description": "Project root to analyze. Default: current directory.",
+            "default": "."
+          },
+          "save": {
+            "type": "boolean",
+            "description": "Write report JSON to .anyharness/reports/analysis-<timestamp>.json. Default: false.",
+            "default": false
+          },
+          "json_output": {
+            "type": "boolean",
+            "description": "Emit machine-readable JSON instead of human-readable text. Default: false.",
+            "default": false
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/analyze.mjs --stack {stack} --path {path}"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
     }
   ]
 }

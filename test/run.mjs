@@ -54,10 +54,11 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
-  assert(Array.isArray(xp.tools) && xp.tools.length === 10, 'codex plugin.json: must have 10 tools');
+  assert(Array.isArray(xp.tools) && xp.tools.length === 11, 'codex plugin.json: must have 11 tools');
   assert(xp.tools.some(t => t.name === 'anyharness_propose_evolution'), 'codex plugin.json: anyharness_propose_evolution tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_extract_architecture'), 'codex plugin.json: anyharness_extract_architecture tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_derive_risk_topology'), 'codex plugin.json: anyharness_derive_risk_topology tool required');
+  assert(xp.tools.some(t => t.name === 'anyharness_analyze'), 'codex plugin.json: anyharness_analyze tool required');
   for (const tool of xp.tools) {
     assert(typeof tool.sideEffects === 'boolean', `tool ${tool.name}: sideEffects must be boolean`);
     assert(typeof tool.idempotent === 'boolean', `tool ${tool.name}: idempotent must be boolean`);

@@ -67,34 +67,35 @@ Full details in `references/operating-model.md`. Summary:
 
 ## Default workflow: deep architecture analysis
 
-**Always start with `--stack auto`.** It detects the stack automatically and takes
-the right path — deterministic extractor for known stacks, LLM-based analysis for
-everything else. You do not need to identify the stack yourself first.
+**Always use `analyze.mjs` as the single entry point.** It auto-detects the stack,
+runs extraction + topology in one shot, and emits a human-readable severity report.
+You do not need to identify the stack or pipe commands manually.
 
 ```
-scripts/extract-architecture.mjs --stack auto [path]
+scripts/analyze.mjs --stack auto [--path <dir>] [--save]
 ```
+
+- `--stack auto` is the default; omit or keep it.
+- `--path` sets the project root (default: current directory).
+- `--save` writes the full report JSON to `.anyharness/reports/analysis-<timestamp>.json`.
+- `--json` emits machine-readable JSON if you need structured output.
 
 ### Path A — supported stack (deterministic)
 
-If the output has `needsLLMAnalysis: false` (or absent), pipe to topology:
+When the stack is `java-spring`, `rust-tauri`, `csharp-avalonia`, or `cpp-sdk`
+(or the project has a `.anyharness/stack-config.json`), `analyze.mjs` runs the
+deterministic extractor then the topology rules automatically.
 
-```
-extract-architecture.mjs --stack auto . | derive-risk-topology.mjs
-```
-
-Present risks grouped by severity (blocker → high → medium → low). Each risk has
+Output is grouped by severity (blocker → high → medium → low). Each finding has
 a `candidate` field ready for the evolve workflow. Ask which to apply, then run
 `propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
 
-Supported stacks: `java-spring` (Spring Boot), `rust-tauri` (Tauri desktop),
-`csharp-avalonia` (Avalonia MVVM), `cpp-sdk` (C/C++ SDK).
-
 ### Path B — unsupported stack (LLM analysis)
 
-If the output has `needsLLMAnalysis: true`:
+When no deterministic extractor exists, `analyze.mjs` prints the sampled file list
+and exits. You then perform the analysis:
 
-1. The output contains `sampledFiles` — a ranked list of high-signal source files.
+1. `analyze.mjs` lists `sampledFiles` — a ranked list of high-signal source files.
 2. Read each file using your file-reading tool.
 3. Load `references/llm-extractor.md` for analysis guidance.
 4. Apply the 7 universal failure modes (from `references/universal-failure-modes.md`)
@@ -103,6 +104,12 @@ If the output has `needsLLMAnalysis: true`:
 
 The LLM analysis is shallower (only sampled files, no cross-file pointer analysis)
 but works on **any stack** — Python/FastAPI, Go/Gin, Node/Express, Electron, etc.
+
+### Path C — user-defined stack config
+
+Drop `.anyharness/stack-config.json` in the project root for deterministic extraction
+on any stack without writing code. See `references/stack-config-schema.md` for the
+schema and example configs (Python/FastAPI, Go/Gin, Node/Express).
 
 ### Trigger phrases
 
@@ -165,6 +172,7 @@ Load on demand:
 - `references/universal-failure-modes.md` — 7 cross-stack failure mode concepts
 - `references/architecture-extraction.md` — deep architecture extraction design
 - `references/risk-topology.md` — converting extraction into risk findings
+- `references/stack-config-schema.md` — `.anyharness/stack-config.json` schema for Path C (any stack, no code)
 - `references/stacks/java-spring.md` — Spring failure mode knowledge pack
 - `references/stacks/rust-tauri.md` — Rust + Tauri failure mode knowledge pack
 - `references/stacks/csharp-avalonia.md` — C# + Avalonia failure mode knowledge pack
@@ -181,12 +189,13 @@ Load on demand:
 
 Use scripts only when the client supports tool/bash execution:
 
+- `scripts/analyze.mjs [--stack auto] [--path <dir>] [--save] [--json]` (**recommended** unified entry point)
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
-- `scripts/extract-architecture.mjs --stack auto [path]` (auto-detect; recommended default)
+- `scripts/extract-architecture.mjs --stack auto [path]` (extraction only; use analyze.mjs for full pipeline)
 - `scripts/extract-architecture.mjs --stack <java-spring|rust-tauri|csharp-avalonia|cpp-sdk> [path]` (explicit)
 - `scripts/sample-for-llm.mjs [--root path] [--max-files n]` (file sampling for unsupported stacks)
-- `scripts/derive-risk-topology.mjs [--in path]` (or pipe from extract-architecture)
+- `scripts/derive-risk-topology.mjs [--in path]` (topology only; use analyze.mjs for full pipeline)
 - `scripts/write-profile.mjs [--from path] [--confirm] [--overwrite]`
 - `scripts/write-native-prompts.mjs [--target claude|codex|cursor|both|all] [--profile path]`
 - `scripts/validate-profile.mjs [path]`
