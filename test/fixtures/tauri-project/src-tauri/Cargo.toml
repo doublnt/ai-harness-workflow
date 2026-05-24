@@ -1,0 +1,8 @@
+[package]
+name = "tauri-fixture"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+tauri = "1"
+serde = { version = "1", features = ["derive"] }

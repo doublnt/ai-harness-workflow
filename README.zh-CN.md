@@ -65,7 +65,7 @@ Scripts 负责辅助。
 
 没有 evolve 循环，AnyHarness 只是一份快照。有了它，harness 变成一个学习系统——每次 review 都能让下一次更准。
 
-## 深度架构分析（PoC：java-spring）
+## 深度架构分析（支持 4 大技术栈）
 
 `scan-project.mjs` 只能看文件名和目录结构，看不到架构。这条**深度分析路径**才是真正的 harness engineering：
 
@@ -74,25 +74,60 @@ extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolut
    (解析源码)                     (推导风险边界)                   (写入 profile)
 ```
 
-对支持的栈（目前是 **java-spring**），AnyHarness 会：
+AnyHarness 内置了 4 个技术栈的完整链路（提取器 + 风险拓扑 + 失效模式知识库）：
 
-1. 解析 `.java` 源码（不是文件名扫描）——识别 controller / service / repository / entity、`@Transactional` 方法（含 propagation）、Kafka send/listener、外部 HTTP 调用、`this.x()` self-invocation、JPA `@Query` 修改语句等
-2. 把这些结构化数据交给 **风险拓扑层**——识别真正的失败模式：
-   - **dual-write**：`@Transactional` 方法里又 send Kafka（DB 提交和消息发送不一致）
-   - **tx-self-invocation**：`this.foo()` 绕过 Spring 代理，`@Transactional` 静默失效
-   - **missing-modifying**：`@Query` 写语句没加 `@Modifying`（运行时静默失败）
-   - **kafka-no-idempotency**：at-least-once 投递必须幂等
-   - **requires-new-pool**：`REQUIRES_NEW` 在并发下耗尽连接池
-   - **external-no-retry**：外部 HTTP 调用没有超时/熔断/重试
-   - **trust-boundary**：HTTP 端点未校验输入
-3. 每个发现都带：`file:line` 引用、严重等级、**预制的 Learning Candidate**——可以直接喂给 evolve 循环写进 profile。
+### java-spring
 
-这是和"通用代码 review checklist"的本质区别——结构化提取 + 栈特定知识库 = 找到的是**这一类项目的真实风险**，不是泛泛的代码风格问题。
+解析 `.java` 源码——识别 controller/service/repository/entity、`@Transactional` 方法（含 propagation）、Kafka send/listener、外部 HTTP 调用、self-invocation、JPA `@Query` 修改语句。
 
-> 目前只有 java-spring 一栈走通了完整链路。其他栈仍然走 `scan-project.mjs` + LLM 推理（浅层）。后续会按相同契约加更多栈（node-express、go-stdlib 等）。
-> 提取器当前是正则实现（PoC 级），未来可换成 tree-sitter / javaparser 而不改下游契约。
+风险模式（所有发现均带 `file:line` 引用）：
+- **state-mutation-safety**：dual-write（`@Transactional` 里 send Kafka）、`this.foo()` 绕过 Spring 代理、Kafka at-least-once 未保幂等
+- **missing-modifying**：`@Query` 写语句没加 `@Modifying`（运行时静默失败）**→ blocker**
+- **resource-lifetime**：`REQUIRES_NEW` 在并发下耗尽连接池
+- **external-interaction**：外部 HTTP 调用没有超时/熔断/重试
+- **trust-boundary**：HTTP 端点未校验输入
 
-详见 `references/architecture-extraction.md`、`references/risk-topology.md`、`references/stacks/java-spring.md`。
+### rust-tauri
+
+解析 `.rs` 源码——识别 `#[tauri::command]`、`tauri::generate_handler![]`、`unsafe {}` 块、`std::fs`/`std::process` 调用、`tokio::spawn`。
+
+风险模式：
+- **trust-boundary**：未注册的 `#[tauri::command]`（死代码或插件路由暴露）、fs 路径遍历（renderer 控制路径）
+- **external-interaction**：`Command::new("sh").arg("-c").arg(&user_input)` 命令注入
+- **trust-boundary (blocker)**：`unsafe {}` 块在已注册的 Tauri command 里——JS 可触发任意内存读写
+- **resource-lifetime**：`tokio::spawn` 捕获 raw pointer、async command 无取消路径
+
+### csharp-avalonia
+
+解析 `.cs` 源码——识别 `async void`、`ObservableCollection` 跨线程写入、`HttpClient`、`Process.Start`、`[DllImport]`/`[LibraryImport]`、`unsafe` 块、`IDisposable` 字段。
+
+风险模式：
+- **error-propagation**：`async void` 异常无法被捕获，直接崩溃
+- **threading-discipline**：`ObservableCollection` 在 `Task.Run` 里 `Add/Clear` → 跨线程访问崩溃
+- **resource-lifetime**：每次调用 `new HttpClient()` → socket 耗尽；`IDisposable` 字段未 Dispose
+- **trust-boundary**：`Process.Start(UseShellExecute=true, fileName=userInput)` → OS 选 handler 执行任意文件；P/Invoke 错误 marshaling
+
+### cpp-sdk
+
+解析 `.h`/`.cpp` 源码——识别公开 API 签名（指针+长度、`void* ctx`、`char*` 返回值）、`memcpy`/`sprintf`/`strcpy`、`new`/`delete`、`std::thread` 创建/detach/join、全局可变状态。
+
+风险模式：
+- **trust-boundary (blocker)**：`memcpy(out, data, len)` 无 `len <= out_len` 检查 → 堆溢出
+- **trust-boundary**：`sprintf` 无长度限制；公开 API 接受指针+长度但实现不验证
+- **api-stability**：`char*` 返回值所有权不明（谁 free？）；`void* ctx` 生命周期无文档
+- **resource-lifetime**：`std::thread::detach()` → 孤儿线程、use-after-free
+- **threading-discipline**：lambda 捕获 raw pointer 后跨线程访问、全局 mutex 锁序未定义
+
+---
+
+每个发现都带：`file:line` 引用、严重等级（blocker/high/medium/low）、**预制的 Learning Candidate**——可以直接喂给 evolve 循环写进 profile。
+
+这是和"通用代码 review checklist"的本质区别：**结构化提取 + 栈特定知识库 = 找到的是这类项目的真实风险，而不是泛泛的代码风格问题。**
+
+> 提取器当前是正则实现（PoC 级），未来可换成 tree-sitter / Roslyn / libclang 而不改下游契约。
+> 新增栈只需一个提取器模块 + 一个拓扑规则模块 + 一个知识库文件，见 `references/probe-architecture.md`。
+
+详见 `references/probe-architecture.md`、`references/universal-failure-modes.md`、`references/stacks/<stack>.md`。
 
 AnyHarness 把 LLM 用在它擅长的地方：
 

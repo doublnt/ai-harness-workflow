@@ -26,7 +26,8 @@ Activate for any of these user intents (exact wording is not required):
 - evolve the harness from this review / apply learnings to the profile
 - what should we add to the profile based on this review
 - analyze the architecture / risk topology of this codebase
-- find architectural risks in this Spring project
+- find architectural risks in this project (Spring / Tauri / Avalonia / C++ SDK)
+- find trust boundaries / failure modes in this codebase
 
 ## Non-negotiable rules
 
@@ -66,23 +67,32 @@ Full details in `references/operating-model.md`. Summary:
 
 ## Default workflow: deep architecture analysis
 
-For supported stacks (currently `java-spring`), use the architecture extractor +
-risk topology derivation. This produces structured risk findings with citations,
-each pre-formatted as a Learning Candidate ready for the evolve loop.
+Supported stacks: `java-spring`, `rust-tauri`, `csharp-avalonia`, `cpp-sdk`.
 
-1. Run extraction: `scripts/extract-architecture.mjs --stack java-spring [path]`.
-2. Pipe to topology: `scripts/derive-risk-topology.mjs --in <extraction.json>` (or pipe via stdin).
-3. Present risks to the user grouped by severity (blocker / high / medium / low).
-4. For each risk, the `candidate` field can be applied via the evolve workflow.
-5. Ask which findings to apply, then run `propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
+The architecture extractor reads source code (not filenames) and produces structured
+risk findings with file:line citations, each pre-formatted as a Learning Candidate.
+
+1. Identify the stack from the project (`Cargo.toml` → rust-tauri, `*.csproj` with Avalonia → csharp-avalonia, `pom.xml`/`build.gradle` with Spring → java-spring, `CMakeLists.txt`/SDK header structure → cpp-sdk).
+2. Run extraction: `scripts/extract-architecture.mjs --stack <stack> [path]`.
+3. Pipe to topology: `scripts/derive-risk-topology.mjs [--in path]` (or pipe stdin).
+4. Present risks grouped by severity (blocker → high → medium → low).
+5. For each risk, the `candidate` field can be applied via the evolve workflow.
+6. Ask which findings to apply, then run `propose-evolution.mjs --findings <path>` (draft) then `--confirm` (merge).
 
 Use this workflow when the user asks for "architecture analysis", "risk topology",
-or wants to find architectural risks in a Spring project. For other stacks, the
-extractor will error — fall back to the regular scan + LLM reasoning workflow.
+"find trust boundaries", or architectural risks in any of the 4 supported stacks.
+For unsupported stacks, fall back to the regular scan + LLM reasoning workflow.
 
-See `references/architecture-extraction.md` and `references/risk-topology.md`
-for the design. See `references/stacks/java-spring.md` for the failure modes
-the topology layer reasons over.
+Trigger phrases that activate this workflow:
+- "analyze the architecture"
+- "find risk topology"
+- "find trust boundaries in this project"
+- "what are the architectural risks"
+- "analyze this Spring / Tauri / Avalonia / C++ SDK project"
+
+See `references/probe-architecture.md` for the extractor contract and how to add new stacks.
+See `references/universal-failure-modes.md` for cross-stack concepts.
+See `references/stacks/<stack>.md` for per-stack failure modes and safe patterns.
 
 ## Default workflow: evolve harness from review
 
@@ -115,7 +125,7 @@ Load on demand:
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
 - Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
-- Architecture analysis → `references/architecture-extraction.md`, `references/risk-topology.md`, `references/stacks/<stack>.md`
+- Architecture analysis → `references/probe-architecture.md`, `references/universal-failure-modes.md`, `references/architecture-extraction.md`, `references/risk-topology.md`, `references/stacks/<stack>.md`
 - Gates / enforcement → `references/gate-runtime.md`
 - Writing files → `references/native-prompt-surfaces.md`
 
@@ -126,9 +136,14 @@ Load on demand:
 - `references/discovery-seeds.md` — domain interview seeds (payment / electron / trading)
 - `references/harness-synthesis.md` — profile synthesis rules
 - `references/harness-evolution.md` — learning candidates and the review→evolve loop
-- `references/architecture-extraction.md` — deep architecture extraction (PoC: java-spring)
+- `references/probe-architecture.md` — probe architecture design: extractor + topology contracts, how to add stacks
+- `references/universal-failure-modes.md` — 7 cross-stack failure mode concepts
+- `references/architecture-extraction.md` — deep architecture extraction design
 - `references/risk-topology.md` — converting extraction into risk findings
 - `references/stacks/java-spring.md` — Spring failure mode knowledge pack
+- `references/stacks/rust-tauri.md` — Rust + Tauri failure mode knowledge pack
+- `references/stacks/csharp-avalonia.md` — C# + Avalonia failure mode knowledge pack
+- `references/stacks/cpp-sdk.md` — C++ SDK failure mode knowledge pack
 - `references/expert-review.md` — expert role schema and review output format
 - `references/review-packet.md` — packet contents and prompt rules
 - `references/gate-runtime.md` — optional local enforcement files
@@ -143,7 +158,7 @@ Use scripts only when the client supports tool/bash execution:
 
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
-- `scripts/extract-architecture.mjs --stack java-spring [path]`
+- `scripts/extract-architecture.mjs --stack <java-spring|rust-tauri|csharp-avalonia|cpp-sdk> [path]`
 - `scripts/derive-risk-topology.mjs [--in path]` (or pipe from extract-architecture)
 - `scripts/write-profile.mjs [--from path] [--confirm] [--overwrite]`
 - `scripts/write-native-prompts.mjs [--target claude|codex|cursor|both|all] [--profile path]`

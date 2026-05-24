@@ -409,12 +409,11 @@ try {
     assert(topo.riskCount >= 6, `topology: must find at least 6 risks, got ${topo.riskCount}`);
 
     const kinds = new Set(topo.risks.map(r => r.kind));
-    assert(kinds.has('dual-write'), 'topology: must detect dual-write');
-    assert(kinds.has('tx-self-invocation'), 'topology: must detect tx-self-invocation');
+    // Universal failure mode kinds (post-probe-architecture refactor)
+    assert(kinds.has('state-mutation-safety'), 'topology: must detect state-mutation-safety (dual-write / self-invocation / Kafka)');
     assert(kinds.has('missing-modifying'), 'topology: must detect missing-modifying');
-    assert(kinds.has('kafka-no-idempotency'), 'topology: must detect kafka-no-idempotency');
-    assert(kinds.has('requires-new-pool'), 'topology: must detect requires-new-pool');
-    assert(kinds.has('external-no-retry-hint'), 'topology: must detect external-no-retry-hint');
+    assert(kinds.has('resource-lifetime'), 'topology: must detect resource-lifetime (REQUIRES_NEW)');
+    assert(kinds.has('external-interaction'), 'topology: must detect external-interaction (HTTP without retry)');
 
     assert(topo.counts.blocker >= 1, 'topology: missing-modifying must be a blocker');
     assert(topo.counts.high >= 3, 'topology: must have >= 3 high severity findings');

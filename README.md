@@ -67,7 +67,7 @@ CLAUDE.md rots; AnyHarness is structured as three connected loops:
 Without the evolve loop, AnyHarness is a snapshot. With it, the harness becomes a
 learning system — every review can make the next one sharper.
 
-## Deep architecture analysis (PoC: java-spring)
+## Deep architecture analysis (4 stacks supported)
 
 `scan-project.mjs` only sees filenames and directories — it cannot see the
 architecture. The **deep analysis path** is what real harness engineering looks
@@ -78,40 +78,69 @@ extract-architecture.mjs   →   derive-risk-topology.mjs   →   propose-evolut
    (parse source)                 (derive risk boundaries)         (write to profile)
 ```
 
-For supported stacks (currently **java-spring**), AnyHarness will:
+AnyHarness ships a complete pipeline (extractor + topology rules + knowledge pack)
+for 4 technology stacks:
 
-1. Parse `.java` sources (not filename scanning) — identifying controllers,
-   services, repositories, entities, `@Transactional` methods with propagation,
-   Kafka sends/listeners, external HTTP calls, `this.x()` self-invocations,
-   JPA `@Query` mutations, etc.
-2. Feed the structured extraction to a **risk topology layer** that identifies
-   real failure modes:
-   - **dual-write**: `@Transactional` method also sending to Kafka (DB commit and
-     publish are independent — partial failure leaves the system inconsistent)
-   - **tx-self-invocation**: `this.foo()` bypasses the Spring proxy; `@Transactional`
-     silently does nothing
-   - **missing-modifying**: `@Query` UPDATE/DELETE without `@Modifying` —
-     silent runtime failure
-   - **kafka-no-idempotency**: at-least-once delivery requires idempotent handlers
-   - **requires-new-pool**: `REQUIRES_NEW` under load can exhaust the connection pool
-   - **external-no-retry**: external HTTP calls without visible timeout / circuit-breaker
-   - **trust-boundary**: HTTP endpoints accepting input without `@Valid`
-3. Each finding includes a `file:line` citation, severity, and a
-   **pre-formatted Learning Candidate** that can be fed directly into the
-   evolve loop to write the rule into the project profile.
+### java-spring
+
+Parses `.java` sources to find controllers, services, repositories, `@Transactional`
+methods, Kafka send/listener bindings, external HTTP calls, self-invocations, `@Query`
+mutations. Detects:
+- **state-mutation-safety**: dual-write (DB + Kafka in same `@Transactional`); `this.foo()` bypasses Spring proxy; Kafka at-least-once without idempotency
+- **missing-modifying**: `@Query` UPDATE/DELETE without `@Modifying` → silent runtime failure (**blocker**)
+- **resource-lifetime**: `REQUIRES_NEW` under load can exhaust the connection pool
+- **external-interaction**: HTTP calls without visible timeout / retry / circuit-breaker
+- **trust-boundary**: HTTP endpoints accepting input without `@Valid`
+
+### rust-tauri
+
+Parses `.rs` sources to find `#[tauri::command]` functions, `generate_handler![]`
+registrations, `unsafe {}` blocks, `std::fs`/`std::process` calls, `tokio::spawn`.
+Detects:
+- **trust-boundary (blocker)**: `unsafe` block inside a registered Tauri command — renderer JS can trigger arbitrary native memory access
+- **trust-boundary**: unregistered `#[tauri::command]` (dead code or plugin route); `fs::read_to_string` with renderer-supplied path (path traversal)
+- **external-interaction**: `Command::new("sh").arg("-c").arg(&user_input)` command injection
+- **resource-lifetime**: `tokio::spawn` capturing a raw handle; async command with no cancellation path
+
+### csharp-avalonia
+
+Parses `.cs` sources to find `async void`, `ObservableCollection` cross-thread writes,
+`HttpClient` creation patterns, `Process.Start`, `[DllImport]`/`[LibraryImport]`,
+`unsafe` blocks, `IDisposable` fields.
+Detects:
+- **error-propagation**: `async void` — exceptions propagate to `SynchronizationContext` and crash the app
+- **threading-discipline**: `ObservableCollection.Add/Clear` inside `Task.Run` — cross-thread mutation crashes UI
+- **resource-lifetime**: `new HttpClient()` per call (socket exhaustion); `IDisposable` field in non-`IDisposable` class
+- **trust-boundary**: `Process.Start(UseShellExecute=true, fileName=userInput)` → OS picks handler; P/Invoke with unchecked marshaling
+
+### cpp-sdk
+
+Parses `.h`/`.cpp` sources to find public API signatures (raw pointer+length, `void* ctx`,
+`char*` returns), `memcpy`/`sprintf`/`strcpy`, `new`/`delete`, `std::thread`
+create/detach/join, global mutable state.
+Detects:
+- **trust-boundary (blocker)**: `memcpy(out, data, len)` with no `len <= out_len` check → heap buffer overflow
+- **trust-boundary**: `sprintf` without `snprintf`; public API accepting raw pointer+size
+- **api-stability**: `char*` return with ambiguous ownership (who frees?); `void* ctx` callback with no lifetime contract
+- **resource-lifetime**: `std::thread::detach()` → orphan thread, use-after-free on captured pointer; raw `new`/`delete` instead of RAII
+- **threading-discipline**: data race on shared flag (no `std::atomic`); global state with undefined lock ordering
+
+---
+
+Every finding includes a `file:line` citation, severity (blocker/high/medium/low),
+and a **pre-formatted Learning Candidate** ready to feed into the evolve loop.
 
 This is what separates AnyHarness from a generic review checklist: structured
-extraction + stack-specific knowledge produces findings about **this kind of
+source extraction + stack-specific knowledge produces findings about **this kind of
 project's real failure modes**, not generic style issues.
 
-> The full pipeline currently exists only for `java-spring`. Other stacks still
-> use `scan-project.mjs` + LLM reasoning (shallow). More stacks will be added
-> under the same contract (`node-express`, `go-stdlib`, etc.).
-> The current extractor is regex-based (PoC quality); a future iteration can
-> swap in tree-sitter or javaparser without changing the downstream contract.
+> Extractors are regex-based (PoC quality) and replaceable with tree-sitter / Roslyn /
+> libclang without changing the downstream contract. Adding a new stack requires one
+> extractor module + one topology module + one knowledge pack.
+> See `references/probe-architecture.md` for the contract.
 
-See `references/architecture-extraction.md`, `references/risk-topology.md`, and
-`references/stacks/java-spring.md`.
+See `references/probe-architecture.md`, `references/universal-failure-modes.md`, and
+`references/stacks/<stack>.md`.
 
 AnyHarness uses the LLM where it is strongest:
 
