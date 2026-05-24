@@ -426,17 +426,23 @@ AnyHarness 会：
 输入：
 
 ```text
-Use AnyHarness to adopt this existing repository safely.
+/anyharness:run onboard this existing repository
 ```
 
-老项目默认行为：
+底层跑 `onboard.mjs`——一条命令把"项目扫描 + 架构分析"合并成一次，在**一次确认**内完成 profile 写入并同时植入真实风险发现。
 
-- 先只读扫描
-- 不覆盖文件
-- 如果 `CLAUDE.md` 或 `AGENTS.md` 已存在，则生成 draft
-- 生成带证据的领域假设
-- 写入前必须用户确认
-- 不主动安装 hooks
+**执行流程：**
+
+1. **扫描 + 分析同步进行** — 读取目录结构、检测技术栈和领域信号，然后立即对源码做深度架构提取。
+2. **合并展示** — 把领域假设和架构风险发现（带 `file:line` 引用）放在一起呈现，而不是分两步走。
+3. **更少的问题** — 架构分析已经能回答部分领域问题；AnyHarness 只追问代码里推断不出来的内容。
+4. **一次写入** — 确认后，一次性写入 `CLAUDE.md`、`AGENTS.md` 和 `.anyharness/profile.json`，profile 里同时包含领域 invariant 和来自架构风险的 invariant。
+
+**安全规则（不变）：**
+
+- 先只读扫描和分析，你确认前不写任何文件
+- 已有的 `CLAUDE.md` / `AGENTS.md` 绝不覆盖，只生成 draft
+- 不主动安装 hooks，除非你明确要求
 
 ## 领域发现流程
 

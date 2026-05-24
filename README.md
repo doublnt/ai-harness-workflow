@@ -451,17 +451,32 @@ AnyHarness will:
 Ask:
 
 ```text
-Use AnyHarness to adopt this existing repository safely.
+/anyharness:run onboard this existing repository
 ```
 
-Default behavior for existing projects:
+This runs `onboard.mjs` — a single command that combines project scan +
+architecture analysis, then writes the profile seeded with real risk findings
+in one confirmation step.
 
-- read-only scan first
-- no overwrite
-- draft native prompt changes if `CLAUDE.md` or `AGENTS.md` already exists
-- generate domain hypotheses with evidence
-- ask for confirmation before writing
-- do not install hooks unless explicitly requested
+**What it does:**
+
+1. **Scan + analyze together** — reads directory structure, detects stacks and
+   domain signals, then immediately runs deep architecture extraction on the
+   source code.
+2. **Combined presentation** — shows domain hypotheses *and* architecture risk
+   findings (with `file:line` citations) side by side, rather than as separate
+   steps.
+3. **Fewer questions** — the architecture analysis already answers some domain
+   questions; AnyHarness only asks what it couldn't infer from the code.
+4. **Single write** — after you confirm, writes `CLAUDE.md`, `AGENTS.md`, and
+   `.anyharness/profile.json` seeded with both domain invariants and
+   risk-derived invariants in one shot.
+
+**Safety rules (unchanged):**
+
+- read-only scan and analysis first — nothing written until you confirm
+- existing `CLAUDE.md` / `AGENTS.md` are never overwritten; drafts are generated
+- hooks are not installed unless you explicitly request them
 
 ## Domain discovery workflow
 
