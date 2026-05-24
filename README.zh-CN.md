@@ -109,7 +109,7 @@ AGENTS.md      # Codex / 通用 agent 指令
 - 在本地克隆本仓库：
 
 ```bash
-git clone https://github.com/your-org/anyharness.git ~/anyharness
+git clone https://github.com/doublnt/ai-harness-workflow.git ~/anyharness
 # 也可以放到你习惯的位置
 ```
 

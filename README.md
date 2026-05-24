@@ -109,7 +109,7 @@ These are generated only after explicit confirmation.
 - This repository cloned locally:
 
 ```bash
-git clone https://github.com/your-org/anyharness.git ~/anyharness
+git clone https://github.com/doublnt/ai-harness-workflow.git ~/anyharness
 # or wherever you prefer
 ```
 
