@@ -17,7 +17,7 @@ Use AnyHarness for this repository.
 In Claude Code, the installed plugin may expose the namespaced skill as:
 
 ```text
-/anyharness:anyharness
+/anyharness:run
 ```
 
 In Codex, you can use natural language:
@@ -155,7 +155,7 @@ Or open the plugin marketplace UI, find **anyharness**, and click Install.
 ### Step 3 — Verify installation
 
 ```text
-/anyharness:anyharness
+/anyharness:run
 ```
 
 You should see AnyHarness respond and ask what you'd like to do.
@@ -167,25 +167,25 @@ Open (or `cd` into) the project you want to analyze. Then:
 **Adopt an existing project:**
 
 ```text
-/anyharness:anyharness adopt this repository safely
+/anyharness:run adopt this repository safely
 ```
 
 **Initialize a new project:**
 
 ```text
-/anyharness:anyharness initialize this new project
+/anyharness:run initialize this new project
 ```
 
 **Review staged changes:**
 
 ```text
-/anyharness:anyharness review the current staged diff
+/anyharness:run review the current staged diff
 ```
 
 **Generate a cross-model review packet:**
 
 ```text
-/anyharness:anyharness create a security review packet for the staged diff
+/anyharness:run create a security review packet for the staged diff
 ```
 
 AnyHarness will guide you through the rest interactively — scanning, asking questions,

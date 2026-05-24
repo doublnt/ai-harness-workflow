@@ -5,8 +5,8 @@
   "author": {
     "name": "AnyHarness Contributors"
   },
-  "homepage": "https://github.com/your-org/anyharness",
-  "repository": "https://github.com/your-org/anyharness",
+  "homepage": "https://github.com/doublnt/ai-harness-workflow",
+  "repository": "https://github.com/doublnt/ai-harness-workflow",
   "license": "MIT",
   "keywords": [
     "ai-coding",
@@ -16,7 +16,7 @@
     "domain-discovery",
     "project-rules"
   ],
-  "skills": [{ "name": "anyharness", "path": "./skills/anyharness/", "version": "3.0.0" }],
+  "skills": [{ "name": "run", "path": "./skills/anyharness/", "version": "3.0.0" }],
   "interface": {
     "displayName": "AnyHarness",
     "shortDescription": "Skill-first adaptive engineering harness.",

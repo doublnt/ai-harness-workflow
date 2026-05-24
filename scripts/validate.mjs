@@ -39,7 +39,7 @@ const skillFiles = [
 for (const s of skillFiles) {
   const text = fs.readFileSync(path.join(root, s), 'utf8');
   if (!text.startsWith('---\n')) throw new Error(`${s} missing frontmatter`);
-  if (!text.includes('name: anyharness')) throw new Error(`${s} missing skill name`);
+  if (!text.includes('name: run')) throw new Error(`${s} missing skill name (expected: name: run)`);
   if (!text.includes('description:')) throw new Error(`${s} missing description`);
 }
 

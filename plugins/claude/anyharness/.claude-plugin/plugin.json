@@ -5,7 +5,7 @@
   "author": {
     "name": "AnyHarness Contributors"
   },
-  "repository": "https://github.com/your-org/anyharness",
+  "repository": "https://github.com/doublnt/ai-harness-workflow",
   "license": "MIT",
   "keywords": [
     "ai-coding",
@@ -15,5 +15,5 @@
     "domain-discovery",
     "project-rules"
   ],
-  "skills": [{ "name": "anyharness", "path": "./skills/anyharness/", "version": "3.0.0" }]
+  "skills": [{ "name": "run", "path": "./skills/anyharness/", "version": "3.0.0" }]
 }

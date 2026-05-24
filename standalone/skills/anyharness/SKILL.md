@@ -1,5 +1,5 @@
 ---
-name: anyharness
+name: run
 description: "Adaptive AI engineering harness that learns your project domain and generates project-specific review roles, invariants, and cross-model review packets."
 version: 3.0.0
 ---

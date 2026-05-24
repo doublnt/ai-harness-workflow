@@ -17,7 +17,7 @@ Use AnyHarness for this repository.
 在 Claude Code 插件里，可能显示为命名空间 skill：
 
 ```text
-/anyharness:anyharness
+/anyharness:run
 ```
 
 在 Codex 里可以直接说：
@@ -155,7 +155,7 @@ git clone https://github.com/doublnt/ai-harness-workflow.git ~/anyharness
 ### 第三步 — 验证安装
 
 ```text
-/anyharness:anyharness
+/anyharness:run
 ```
 
 你应该能看到 AnyHarness 响应并询问你想做什么。
@@ -167,25 +167,25 @@ git clone https://github.com/doublnt/ai-harness-workflow.git ~/anyharness
 **接管已有项目：**
 
 ```text
-/anyharness:anyharness adopt this repository safely
+/anyharness:run adopt this repository safely
 ```
 
 **初始化新项目：**
 
 ```text
-/anyharness:anyharness initialize this new project
+/anyharness:run initialize this new project
 ```
 
 **review 已暂存的改动：**
 
 ```text
-/anyharness:anyharness review the current staged diff
+/anyharness:run review the current staged diff
 ```
 
 **生成跨模型 review packet：**
 
 ```text
-/anyharness:anyharness create a security review packet for the staged diff
+/anyharness:run create a security review packet for the staged diff
 ```
 
 AnyHarness 会全程交互引导你——扫描项目、提问确认，在写入任何文件前都会等你确认。

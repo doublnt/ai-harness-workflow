@@ -50,7 +50,7 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
 {
   const cp = JSON.parse(fs.readFileSync('plugins/claude/anyharness/.claude-plugin/plugin.json', 'utf8'));
   assert(Array.isArray(cp.skills), 'claude plugin.json: skills must be array');
-  assert(cp.skills[0].name === 'anyharness', 'claude plugin.json: skills[0].name must be anyharness');
+  assert(cp.skills[0].name === 'run', 'claude plugin.json: skills[0].name must be run');
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
