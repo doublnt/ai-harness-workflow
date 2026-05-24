@@ -221,3 +221,85 @@ After the user confirms, AnyHarness internally calls `install-local-hooks.mjs --
 
 The generated `check.mjs` supports `--skip-if-no-profile` so CI does not fail on
 repositories that have not set up a profile yet.
+
+---
+
+## 8. Evolve the harness from a review (feedback loop)
+
+This is the closed loop that makes the harness a learning system. After a review,
+findings that represent a class of bug — not just a one-off — become invariants
+in the profile, so the next review is sharper.
+
+```text
+Use AnyHarness to review the current staged diff.
+```
+
+AnyHarness runs the review and ends with a Learning Candidates section:
+
+```text
+Verdict: Blocked
+
+Learning Candidates:
+- type: new-invariant
+  proposed: Webhook handlers under src/webhooks/ must look up the idempotency
+            key in payment_events before any side effect.
+  evidence: src/webhooks/PaymentWebhook.java:42 (this PR),
+            src/webhooks/RefundWebhook.java:31 (existing code with same flaw)
+  rationale: Two handlers already exhibit the missing check; new handlers will
+             repeat the pattern.
+
+- type: new-gate
+  proposed: Changes to src/webhooks/ require an idempotency-key test.
+  evidence: recurring pattern across 3 prior PRs
+  rationale: Generalizable check, not a one-off review note.
+
+- type: new-unknown
+  question: Does the retry queue interact with the idempotency guard?
+  evidence: ambiguous in PaymentService.retry()
+
+Apply any of these to the profile?
+```
+
+The user replies:
+
+```text
+Apply all three.
+```
+
+AnyHarness internally writes a findings JSON and calls
+`propose-evolution.mjs --findings <path>` to draft the merged profile:
+
+```text
+Current profile invariants: 7
+Proposed changes:
+  + 1 new invariants
+  ~ 0 refined invariants
+  - 0 retired invariants
+  ? 1 new unknowns
+  + 1 new gates
+Draft saved to: .anyharness/drafts/profile.evolved.json
+Confirmation Needed: review the draft, then confirm to merge into profile.json.
+```
+
+After the user confirms, AnyHarness calls
+`propose-evolution.mjs --findings <path> --confirm`:
+
+```text
+{
+  "action": "evolved",
+  "profile": ".anyharness/profile.json",
+  "learningHistoryEntries": 1,
+  "accepted": { "added": 1, "refined": 0, "retired": 0, "newUnknowns": 1, "newGates": 1 }
+}
+```
+
+The next review now treats the new invariant as a hard rule. The profile carries
+a `learningHistory` entry with timestamp, trigger, and what was learned —
+the harness has visibly evolved.
+
+Re-running the same findings is a no-op (idempotency). Refining or retiring
+existing invariants works the same way (`type: refined-invariant` or
+`type: retired-invariant`).
+
+> See `references/harness-evolution.md` for the candidate-type schema and the
+> filter for what counts as a real learning candidate vs a one-off comment.

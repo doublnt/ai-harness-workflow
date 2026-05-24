@@ -39,13 +39,31 @@ Use AnyHarness to adopt this repository.
 
 通用规则有帮助，但不够。AnyHarness v3 会基于仓库证据和用户确认，生成 **Project Harness Profile**。
 
-## 核心模型
+## 核心模型：三循环 harness
 
 ```text
 Skills 负责推理。
 Scripts 负责辅助。
 可选 hooks 负责执行。
 ```
+
+让 AnyHarness 真正区别于"一次性生成 CLAUDE.md 的工具"的，是它的**反馈循环**。一份静态 CLAUDE.md 会过期，AnyHarness 把工作组织成三个连接的循环：
+
+```text
+┌─────────┐    ┌────────┐    ┌────────┐
+│ INIT    │ ─► │ REVIEW │ ─► │ EVOLVE │ ──┐
+│ (接管)  │    │ (diff) │    │  演化  │   │
+└─────────┘    └────────┘    └────────┘   │
+                   ▲                       │
+                   └───────────────────────┘
+                       profile 越来越精准
+```
+
+- **Init**：从仓库证据 + 用户回答，搭建项目 harness profile。
+- **Review**：用 profile 找 Blocker、Needs Changes 以及 **Learning Candidates（学习候选）**。
+- **Evolve**：把用户确认的 Learning Candidates 写进 profile，附带来源和 `learningHistory` 日志。
+
+没有 evolve 循环，AnyHarness 只是一份快照。有了它，harness 变成一个学习系统——每次 review 都能让下一次更准。
 
 AnyHarness 把 LLM 用在它擅长的地方：
 
@@ -83,7 +101,9 @@ AGENTS.md      # Codex / 通用 agent 指令
 ```text
 .anyharness/
   profile.json       # 机器可读项目 harness profile
+                     # 每次演化后会追加 learningHistory 日志
   profile.md         # 人类可读项目 harness profile
+  drafts/            # --confirm 之前的安全草稿
   gates/             # 门禁产物
   packets/           # 跨模型 review packet
   evidence/          # 测试 / review 证据
@@ -391,12 +411,42 @@ Use AnyHarness to create a security review packet for the staged diff.
 
 你可以把这个 packet 给另一个模型，让它只执行某个专家角色。
 
+## Harness 演化循环
+
+每次 review 结束都会输出一个 **Learning Candidates（学习候选）** 段落：结构化地提议要怎么更新项目 harness。这是 profile 持续保鲜的机制。
+
+```text
+Verdict: Blocked
+
+Learning Candidates:
+- type: new-invariant
+  proposed: src/webhooks/ 下的 webhook 处理器，在任何副作用之前必须先查
+            payment_events 表中的 idempotency key。
+  evidence: src/webhooks/PaymentWebhook.java:42, src/webhooks/RefundWebhook.java:31
+  rationale: 已经有两个 handler 缺这个检查，新 handler 会重复这个模式。
+
+Apply any of these to the profile?
+```
+
+候选类型：
+
+- `new-invariant`——项目应该一直遵守的新规则
+- `refined-invariant`——细化已有 invariant 的措辞或范围
+- `retired-invariant`——移除不再适用的 invariant
+- `new-unknown`——reviewer 没足够上下文回答的问题
+- `new-gate`——每次改动都该自动跑的检查
+
+用户确认后，AnyHarness 把已接受的候选合并进 `.anyharness/profile.json`，并在 `learningHistory` 里追加一条带时间戳的记录（trigger、added、refined、retired、newUnknowns、newGates）。这个合并是**幂等的**——同一份 findings 重跑是 no-op。
+
+判断"是不是真的 learning candidate"的过滤很严格：单文件 bug fix 不是 invariant；能预防一类未来 bug 的规则才是。详见 `references/harness-evolution.md`。
+
 ## 模式
 
 | 模式 | 内容 | 适合 |
 |---|---|---|
 | Skill-only | LLM 交互、领域发现、prompt 面、review packet | 个人开发、探索 |
 | Project Harness | 增加 `.anyharness/profile.json` 和 gates | 认真个人项目、小团队 |
+| Learning Harness | Project Harness + 演化循环（Learning Candidates → profile.json + learningHistory） | 希望 harness 随时间复利增长的团队 |
 | Enforcement | 增加本地 scripts、Git hooks、CI workflow | 团队和生产仓库 |
 
 ## 安全模型

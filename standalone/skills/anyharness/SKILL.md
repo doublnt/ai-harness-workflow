@@ -23,6 +23,8 @@ Activate for any of these user intents (exact wording is not required):
 - update the harness after an architecture change
 - discover domain rules / risks
 - set up AI coding gates
+- evolve the harness from this review / apply learnings to the profile
+- what should we add to the profile based on this review
 
 ## Non-negotiable rules
 
@@ -35,7 +37,8 @@ Activate for any of these user intents (exact wording is not required):
 7. Keep the first user experience simple: scan → summarize → ask → propose writes.
 8. Do not install hooks, Git hooks, CI workflows, or local scripts without explicit confirmation.
 9. If local enforcement is enabled, generated scripts must be repo-local and reviewable.
-10. For review tasks, output Summary → Blockers → Needs Changes → Suggestions → Unknowns → Verdict.
+10. For review tasks, output Summary → Blockers → Needs Changes → Suggestions → Unknowns → Verdict → Learning Candidates.
+11. Never mutate `.anyharness/profile.json` from review findings without explicit user confirmation — present Learning Candidates first, then run `propose-evolution.mjs --confirm` only after the user agrees.
 
 ## Default workflow: initialize or adopt
 
@@ -56,7 +59,19 @@ Full details in `references/operating-model.md`. Summary:
 2. Read `.anyharness/profile.json` if present.
 3. Select expert roles (see `references/expert-review.md`).
 4. Review only against current scope.
-5. Output per `references/output-contract.md`: Summary → Roles → Blockers → Needs Changes → Suggestions → Unknowns → Evidence → Verdict.
+5. Output per `references/output-contract.md`: Summary → Roles → Blockers → Needs Changes → Suggestions → Unknowns → Evidence → Verdict → **Learning Candidates**.
+6. If Learning Candidates were produced, ask the user: *"Apply any of these to the profile?"* and only proceed to the evolve workflow on agreement.
+
+## Default workflow: evolve harness from review
+
+This is the feedback loop that keeps the profile alive (see `references/harness-evolution.md`).
+
+1. From the review output, take the Learning Candidates the user agreed to apply.
+2. Write them to a temp findings JSON: `{"trigger": "<short label>", "candidates": [...]}`.
+3. Draft the evolved profile: `scripts/propose-evolution.mjs --findings <path>`.
+4. Show the diff (added/refined/retired invariants, new unknowns, new gates) and any skipped candidates with reasons.
+5. After user confirms the draft, merge it: `scripts/propose-evolution.mjs --findings <path> --confirm`.
+6. This appends a timestamped entry to `profile.learningHistory`. Re-running the same findings is a no-op.
 
 ## Default workflow: review packet
 
@@ -77,21 +92,23 @@ Load on demand:
 - Synthesis → `references/harness-synthesis.md`, `references/profile-schema.md`
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
+- Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
 - Gates / enforcement → `references/gate-runtime.md`
 - Writing files → `references/native-prompt-surfaces.md`
 
 ## Reference index
 
-- `references/operating-model.md` — planes model and no-npx principle
+- `references/operating-model.md` — planes model, three-loop view, no-npx principle
 - `references/domain-discovery.md` — evidence gathering and hypothesis format
 - `references/discovery-seeds.md` — domain interview seeds (payment / electron / trading)
 - `references/harness-synthesis.md` — profile synthesis rules
+- `references/harness-evolution.md` — learning candidates and the review→evolve loop
 - `references/expert-review.md` — expert role schema and review output format
 - `references/review-packet.md` — packet contents and prompt rules
 - `references/gate-runtime.md` — optional local enforcement files
 - `references/native-prompt-surfaces.md` — CLAUDE.md / AGENTS.md / Cursor rules
 - `references/output-contract.md` — output format for each workflow
-- `references/profile-schema.md` — profile JSON schema and required fields
+- `references/profile-schema.md` — profile JSON schema, learningHistory, provenance
 - `references/safety.md` — ten safety rules with rationale
 
 ## Script index
@@ -104,4 +121,5 @@ Use scripts only when the client supports tool/bash execution:
 - `scripts/write-native-prompts.mjs [--target claude|codex|cursor|both|all] [--profile path]`
 - `scripts/validate-profile.mjs [path]`
 - `scripts/generate-review-packet.mjs [--role name] [--mode staged|unstaged|both] [--max-diff-kb n]`
+- `scripts/propose-evolution.mjs --findings <path> [--confirm]`
 - `scripts/install-local-hooks.mjs [--confirm]`

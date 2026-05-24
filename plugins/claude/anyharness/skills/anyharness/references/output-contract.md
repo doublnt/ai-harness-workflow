@@ -31,10 +31,65 @@ Non-blocking Suggestions:
 Unknowns:
 Required Tests / Evidence:
 Verdict:
+Learning Candidates:
 ```
 
 **Success example**: Blockers section is empty or lists specific findings with file+line citations; Verdict is Pass or Blocked with reasoning.
 **Failure example**: If diff is empty, report it as an error and ask the user to stage changes or provide a diff manually.
+
+### Learning Candidates section
+
+Every review output ends with a `Learning Candidates` section. Each entry is a
+proposed update to the project harness profile. See `harness-evolution.md` for
+when something qualifies as a candidate vs a one-off code review comment.
+
+Each candidate has this structured form:
+
+```text
+- type: new-invariant | refined-invariant | retired-invariant | new-unknown | new-gate
+  proposed: <one-sentence rule, scoped and testable>
+  evidence: <file paths, line numbers, or finding ID from this review>
+  rationale: <why this is a class of bug, not a one-off>
+```
+
+**Success example** (review found a generalizable rule):
+```text
+Learning Candidates:
+- type: new-invariant
+  proposed: Webhook handlers under src/webhooks/ must look up the idempotency key in payment_events before any side effect.
+  evidence: src/webhooks/PaymentWebhook.java:42 (this PR), src/webhooks/RefundWebhook.java:31 (existing code with same flaw)
+  rationale: Two handlers already exhibit the missing check; new handlers will repeat the pattern.
+```
+
+**Skip example** (nothing generalizable):
+```text
+Learning Candidates:
+- (none — findings were code-specific; see Non-blocking Suggestions)
+```
+
+After presenting candidates, ask the user: *"Apply any of these to the profile?"*
+Only call `propose-evolution.mjs --confirm` after explicit user agreement.
+
+## evolve (harness learning)
+
+```text
+Current profile invariants: N
+Proposed changes:
+  + N new invariants
+  ~ N refined invariants
+  - N retired invariants
+  ? N new unknowns
+  + N new gates
+Draft saved to: .anyharness/drafts/profile.evolved.json
+Diff:
+  <unified diff against current profile.json>
+Confirmation Needed:
+```
+
+**Success example**: Draft contains every confirmed candidate, no duplicates of
+existing invariants, and a `learningHistory` entry would be appended on confirm.
+**Failure example**: If proposed candidates duplicate existing invariants, list
+them under "Already in profile" rather than dropping silently.
 
 ## review packet
 

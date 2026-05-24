@@ -20,6 +20,7 @@ Each tool maps directly to a script in this plugin's `scripts/` directory.
 - `anyharness_write_native_prompts` is draft-safe by default (won't overwrite). Still confirm with user before calling.
 - `anyharness_generate_review_packet` writes to `.anyharness/packets/`. Check `diffTruncated` in the result.
 - `anyharness_install_local_hooks` defaults to dry-run (`confirm=false`). Only set `confirm=true` after the user explicitly asks to install hooks.
+- `anyharness_propose_evolution` defaults to draft mode (`confirm=false`). Only set `confirm=true` after the user explicitly approves applying review findings to the profile.
 
 ## Non-negotiable rules
 
@@ -45,7 +46,15 @@ Each tool maps directly to a script in this plugin's `scripts/` directory.
 1. Call `anyharness_collect_diff` with `mode=both`. If `empty=true`, ask user to stage changes.
 2. Call `anyharness_validate_profile` to check profile status; use `nextAction` as guidance.
 3. Read profile invariants and gates from `.anyharness/profile.json`.
-4. Output: Summary → Blockers → Needs Changes → Suggestions → Unknowns → Verdict.
+4. Output: Summary → Blockers → Needs Changes → Suggestions → Unknowns → Verdict → **Learning Candidates**.
+5. If candidates were produced, ask the user *"Apply any of these to the profile?"* and proceed to evolve only on agreement.
+
+### Evolve the harness from a review
+
+1. Write the agreed Learning Candidates into a temp JSON file: `{"trigger": "...", "candidates": [...]}` (see `references/harness-evolution.md` for the schema).
+2. Call `anyharness_propose_evolution` with `findings=<path>` and `confirm=false` to draft.
+3. Show the diff (added/refined/retired invariants, new unknowns/gates) and skipped duplicates.
+4. After user confirms, call `anyharness_propose_evolution` with `confirm=true` to merge into `.anyharness/profile.json` and append a `learningHistory` entry.
 
 ### Generate a cross-model review packet
 
@@ -65,4 +74,5 @@ Load on demand:
 - Synthesis → `references/harness-synthesis.md`, `references/profile-schema.md`
 - Review → `references/expert-review.md`
 - Review packet → `references/review-packet.md`
+- Evolve → `references/harness-evolution.md`, `references/profile-schema.md`
 - Gates → `references/gate-runtime.md`

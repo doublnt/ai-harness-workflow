@@ -39,13 +39,33 @@ The original problem is not only that AI-generated code needs a generic review c
 
 Generic guardrails are useful, but they are not enough. AnyHarness v3 derives a **Project Harness Profile** from repository evidence and user confirmation.
 
-## Core idea
+## Core idea: the three-loop harness
 
 ```text
 Skills reason.
 Scripts assist.
 Optional hooks enforce.
 ```
+
+What makes AnyHarness more than a generator is its **feedback loop**. A static
+CLAUDE.md rots; AnyHarness is structured as three connected loops:
+
+```text
+┌─────────┐    ┌────────┐    ┌────────┐
+│ INIT    │ ─► │ REVIEW │ ─► │ EVOLVE │ ──┐
+│ (adopt) │    │ (diff) │    │        │   │
+└─────────┘    └────────┘    └────────┘   │
+                   ▲                       │
+                   └───────────────────────┘
+                     profile gets sharper
+```
+
+- **Init** bootstraps a project harness profile from repository evidence and user answers.
+- **Review** uses the profile to find Blockers, Needs Changes, and **Learning Candidates**.
+- **Evolve** turns confirmed Learning Candidates into permanent invariants, with provenance and a `learningHistory` ledger.
+
+Without the evolve loop, AnyHarness is a snapshot. With it, the harness becomes a
+learning system — every review can make the next one sharper.
 
 AnyHarness uses the LLM where it is strongest:
 
@@ -83,7 +103,9 @@ If you enable Project Harness mode, it also writes:
 ```text
 .anyharness/
   profile.json       # machine-readable project harness profile
+                     # (carries learningHistory ledger after each evolution)
   profile.md         # human-readable project harness profile
+  drafts/            # safe drafts before --confirm writes
   gates/             # gate artifacts
   packets/           # cross-model review packets
   evidence/          # test/review evidence, if generated
@@ -395,12 +417,49 @@ Generated packet:
 
 You can give that packet to another model and ask it to perform one expert role only.
 
+## Harness evolution loop
+
+Every review ends with a **Learning Candidates** section: structured proposals
+to update the project harness based on what the review found. This is the
+mechanism that keeps the profile alive.
+
+```text
+Verdict: Blocked
+
+Learning Candidates:
+- type: new-invariant
+  proposed: Webhook handlers under src/webhooks/ must look up the idempotency key
+            in payment_events before any side effect.
+  evidence: src/webhooks/PaymentWebhook.java:42, src/webhooks/RefundWebhook.java:31
+  rationale: Two handlers already exhibit the missing check.
+
+Apply any of these to the profile?
+```
+
+Candidate types:
+
+- `new-invariant` — a rule the project should always follow
+- `refined-invariant` — sharpen the wording or scope of an existing invariant
+- `retired-invariant` — remove an invariant that no longer applies
+- `new-unknown` — a question the reviewer couldn't answer without more context
+- `new-gate` — a check that should run automatically on every change
+
+When you confirm, AnyHarness merges accepted candidates into
+`.anyharness/profile.json` and appends a timestamped entry to `learningHistory`,
+including the trigger, what was added, refined, retired, or asked. The merge is
+**idempotent** — re-running with the same findings is a no-op.
+
+The filter for what counts as a learning candidate is strict: a single-file
+bug fix is not an invariant; a rule that would prevent a class of future bugs
+is. See `references/harness-evolution.md`.
+
 ## Modes
 
 | Mode | What it does | Best for |
 |---|---|---|
 | Skill-only | LLM interaction, domain discovery, prompt surfaces, review packets | solo developers, exploration |
 | Project Harness | Adds `.anyharness/profile.json` and gates | serious personal projects, small teams |
+| Learning Harness | Project Harness + evolution loop (Learning Candidates → profile.json + learningHistory) | teams that want the harness to compound over time |
 | Enforcement | Adds local scripts, Git hooks, CI workflow | teams and production repositories |
 
 ## Safety model

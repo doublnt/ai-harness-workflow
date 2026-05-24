@@ -216,6 +216,32 @@
       "sideEffects": true,
       "idempotent": false,
       "safeToRetry": false
+    },
+    {
+      "name": "anyharness_propose_evolution",
+      "description": "Apply learning candidates from a review to the project harness profile. Reads a findings JSON ({trigger, candidates[]}) and the current .anyharness/profile.json. WITHOUT confirm=true: drafts the merged profile at .anyharness/drafts/profile.evolved.json with a diff report (safe default). WITH confirm=true: merges new invariants/gates/unknowns into .anyharness/profile.json and appends a timestamped entry to learningHistory. Idempotent: re-running with the same findings is a no-op.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "string",
+            "description": "Path to a JSON file with shape {trigger: string, candidates: [...]}. See references/harness-evolution.md for the candidate schema."
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Set true to merge into .anyharness/profile.json and append learningHistory. Default: false (draft only).",
+            "default": false
+          }
+        },
+        "required": ["findings"]
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/propose-evolution.mjs --findings {findings}"
+      },
+      "sideEffects": true,
+      "idempotent": true,
+      "safeToRetry": true
     }
   ]
 }

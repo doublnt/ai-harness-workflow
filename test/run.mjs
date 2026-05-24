@@ -54,7 +54,8 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
-  assert(Array.isArray(xp.tools) && xp.tools.length === 7, 'codex plugin.json: must have 7 tools');
+  assert(Array.isArray(xp.tools) && xp.tools.length === 8, 'codex plugin.json: must have 8 tools');
+  assert(xp.tools.some(t => t.name === 'anyharness_propose_evolution'), 'codex plugin.json: anyharness_propose_evolution tool required');
   for (const tool of xp.tools) {
     assert(typeof tool.sideEffects === 'boolean', `tool ${tool.name}: sideEffects must be boolean`);
     assert(typeof tool.idempotent === 'boolean', `tool ${tool.name}: idempotent must be boolean`);
@@ -188,6 +189,152 @@ try {
   const invalidStdout = JSON.parse(rInvalid.stdout);
   assert(invalidStdout.valid === false, 'validate-profile: invalid fixture must return valid:false');
   assert(invalidStdout.nextAction.startsWith('fill_missing_fields'), 'validate-profile: invalid nextAction must list missing fields');
+}
+
+// ── 10. propose-evolution.mjs end-to-end ─────────────────────────────────────
+
+{
+  const tmpEv = fs.mkdtempSync(path.join(os.tmpdir(), 'anyharness-evolve-'));
+  try {
+    // Bootstrap: a valid profile with one existing invariant
+    const profilePath = path.join(tmpEv, '.anyharness', 'profile.json');
+    fs.mkdirSync(path.dirname(profilePath), { recursive: true });
+    const baseProfile = {
+      version: '3.0.0',
+      project: { name: 'evolve-test', stage: 'Unknown' },
+      aiWorkflow: {},
+      stacks: ['node'],
+      domainHypotheses: [],
+      confirmedDomains: ['payment'],
+      glossary: [],
+      domainModel: { entities: [], workflows: [], stateMachines: [] },
+      invariants: [
+        { rule: 'All amounts use Decimal, not float' },
+      ],
+      riskModel: { redZones: [], yellowZones: [], escalationRules: [] },
+      expertRoles: [],
+      gates: [],
+      testOracles: [],
+      evidenceRequirements: [],
+      unknowns: [],
+    };
+    fs.writeFileSync(profilePath, JSON.stringify(baseProfile, null, 2));
+
+    const findingsPath = path.join(tmpEv, 'findings.json');
+    const findings = {
+      trigger: 'review of staged diff',
+      candidates: [
+        {
+          type: 'new-invariant',
+          proposed: 'Webhook handlers must check idempotency key before any side effect',
+          evidence: 'PaymentWebhook.java:42',
+          rationale: 'Class of bug, not one-off',
+        },
+        // Duplicate of existing — must be skipped
+        {
+          type: 'new-invariant',
+          proposed: 'all amounts use decimal, not float',
+        },
+        {
+          type: 'new-unknown',
+          question: 'Whether retry queue interacts with idempotency guard',
+        },
+        {
+          type: 'new-gate',
+          name: 'idempotency-check',
+          rule: 'changes to src/webhooks/ must add an idempotency-key test',
+          evidence: 'recurring pattern',
+        },
+      ],
+    };
+    fs.writeFileSync(findingsPath, JSON.stringify(findings));
+
+    // Draft mode
+    const draftOut = run('node', [script('propose-evolution.mjs'), '--findings', findingsPath], { cwd: tmpEv });
+    const drafted = JSON.parse(draftOut);
+    assert(drafted.action === 'drafted', 'propose-evolution: must report drafted in default mode');
+    assert(drafted.accepted.added === 1, 'propose-evolution: must accept 1 new invariant');
+    assert(drafted.accepted.newUnknowns === 1, 'propose-evolution: must accept 1 new unknown');
+    assert(drafted.accepted.newGates === 1, 'propose-evolution: must accept 1 new gate');
+    assert(drafted.skipped.some(s => s.reason === 'duplicate'), 'propose-evolution: must skip duplicates');
+    assert(fs.existsSync(path.join(tmpEv, '.anyharness', 'drafts', 'profile.evolved.json')),
+      'propose-evolution: must write draft to .anyharness/drafts/profile.evolved.json');
+
+    // profile.json must be unchanged after draft
+    const stillBase = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    assert(stillBase.invariants.length === 1, 'propose-evolution: profile.json must NOT change in draft mode');
+    assert(!stillBase.learningHistory || stillBase.learningHistory.length === 0,
+      'propose-evolution: learningHistory must NOT be appended in draft mode');
+
+    // Confirm mode — merges
+    const confirmOut = run('node', [script('propose-evolution.mjs'), '--findings', findingsPath, '--confirm'], { cwd: tmpEv });
+    const confirmed = JSON.parse(confirmOut);
+    assert(confirmed.action === 'evolved', 'propose-evolution --confirm: must report evolved');
+    assert(confirmed.learningHistoryEntries === 1, 'propose-evolution --confirm: must append one learningHistory entry');
+
+    const evolved = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    assert(evolved.invariants.length === 2, 'propose-evolution: profile must now have 2 invariants');
+    assert(evolved.gates.length === 1, 'propose-evolution: profile must now have 1 gate');
+    assert(evolved.unknowns.length === 1, 'propose-evolution: profile must now have 1 unknown');
+    assert(Array.isArray(evolved.learningHistory) && evolved.learningHistory.length === 1,
+      'propose-evolution: learningHistory must have exactly 1 entry');
+    const entry = evolved.learningHistory[0];
+    assert(typeof entry.at === 'string' && entry.at.includes('T'), 'learningHistory entry: at must be ISO timestamp');
+    assert(entry.trigger === 'review of staged diff', 'learningHistory entry: trigger preserved');
+    assert(entry.added.length === 1 && entry.newUnknowns.length === 1 && entry.newGates.length === 1,
+      'learningHistory entry: must reflect accepted candidates');
+
+    // Idempotency: re-run with same findings is no-op
+    const noopOut = run('node', [script('propose-evolution.mjs'), '--findings', findingsPath, '--confirm'], { cwd: tmpEv });
+    const noop = JSON.parse(noopOut);
+    assert(noop.action === 'noop', 'propose-evolution: re-running with same findings must be noop');
+    const stillEvolved = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    assert(stillEvolved.learningHistory.length === 1,
+      'propose-evolution: learningHistory must not duplicate on no-op re-run');
+    assert(stillEvolved.invariants.length === 2,
+      'propose-evolution: invariants must not duplicate on no-op re-run');
+
+    // Missing --findings: error
+    const missing = assertExitCode('node', [script('propose-evolution.mjs')], 1, { cwd: tmpEv });
+    assert(missing.stderr.includes('missing --findings'), 'propose-evolution: must error on missing --findings');
+
+    // Refined invariant
+    const refinedFindingsPath = path.join(tmpEv, 'findings-refined.json');
+    fs.writeFileSync(refinedFindingsPath, JSON.stringify({
+      trigger: 'review-refine',
+      candidates: [{
+        type: 'refined-invariant',
+        from: 'All amounts use Decimal, not float',
+        to: 'All monetary amounts under src/payment/ use Decimal with banker\'s rounding',
+      }],
+    }));
+    const refineOut = run('node', [script('propose-evolution.mjs'), '--findings', refinedFindingsPath, '--confirm'], { cwd: tmpEv });
+    const refined = JSON.parse(refineOut);
+    assert(refined.accepted.refined === 1, 'propose-evolution: must accept refined-invariant');
+    const refinedProfile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    const stillTwo = refinedProfile.invariants.length === 2;
+    assert(stillTwo, 'propose-evolution: refined invariant replaces, does not add (count stays 2)');
+    assert(refinedProfile.invariants.some(i =>
+      (typeof i === 'object' ? i.rule : i).includes('banker')),
+      'propose-evolution: refined text must be present');
+
+    // Retired invariant
+    const retiredFindingsPath = path.join(tmpEv, 'findings-retired.json');
+    fs.writeFileSync(retiredFindingsPath, JSON.stringify({
+      trigger: 'review-retire',
+      candidates: [{
+        type: 'retired-invariant',
+        rule: 'Webhook handlers must check idempotency key before any side effect',
+      }],
+    }));
+    const retireOut = run('node', [script('propose-evolution.mjs'), '--findings', retiredFindingsPath, '--confirm'], { cwd: tmpEv });
+    const retired = JSON.parse(retireOut);
+    assert(retired.accepted.retired === 1, 'propose-evolution: must accept retired-invariant');
+    const retiredProfile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    assert(retiredProfile.invariants.length === 1, 'propose-evolution: retired invariant must reduce count');
+  } finally {
+    fs.rmSync(tmpEv, { recursive: true, force: true });
+  }
 }
 
 // ── done ─────────────────────────────────────────────────────────────────────
