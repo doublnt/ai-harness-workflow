@@ -38,6 +38,28 @@
   },
   "tools": [
     {
+      "name": "anyharness_onboard",
+      "description": "Unified onboarding for existing projects. Combines scan-project (domain signals, stacks, AI workflow) + analyze (architecture risks, file:line citations) in one pass. Outputs JSON: scanResult (domainSignals, stacks, aiWorkflow), analysisResult (risks with severity/evidence OR sampledFiles for Path B), seedCandidates (Learning Candidates pre-formatted for anyharness_propose_evolution). Use this instead of calling scan + analyze + propose-evolution separately. For Path A/C stacks (java-spring, rust-tauri, csharp-avalonia, cpp-sdk, or stack-config.json present): fully deterministic. For unsupported stacks (Path B): sampledFiles list for LLM analysis. Read-only.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Project root to onboard. Default: current directory.",
+            "default": "."
+          }
+        },
+        "required": []
+      },
+      "execution": {
+        "type": "bash",
+        "command": "node {plugin_dir}/skills/anyharness/scripts/onboard.mjs --path {path} --json"
+      },
+      "sideEffects": false,
+      "idempotent": true,
+      "safeToRetry": true
+    },
+    {
       "name": "anyharness_scan_project",
       "description": "Scan a repository for stacks, AI workflow files, and domain signals. Read-only; safe to retry. Outputs JSON: sampleFiles, stacks, domainSignals, aiWorkflow, notable, truncated, scanScope.",
       "parameters": {

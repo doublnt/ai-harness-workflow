@@ -54,12 +54,13 @@ run('node', ['scripts/sync-distributions.mjs', '--check'], { stdio: 'inherit' })
   assert(typeof cp.skills[0].path === 'string', 'claude plugin.json: skills[0].path must be string');
 
   const xp = JSON.parse(fs.readFileSync('plugins/codex/anyharness/.codex-plugin/plugin.json', 'utf8'));
-  assert(Array.isArray(xp.tools) && xp.tools.length === 12, 'codex plugin.json: must have 12 tools');
+  assert(Array.isArray(xp.tools) && xp.tools.length === 13, 'codex plugin.json: must have 13 tools');
   assert(xp.tools.some(t => t.name === 'anyharness_propose_evolution'), 'codex plugin.json: anyharness_propose_evolution tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_extract_architecture'), 'codex plugin.json: anyharness_extract_architecture tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_derive_risk_topology'), 'codex plugin.json: anyharness_derive_risk_topology tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_analyze'), 'codex plugin.json: anyharness_analyze tool required');
   assert(xp.tools.some(t => t.name === 'anyharness_suggest_stack_config'), 'codex plugin.json: anyharness_suggest_stack_config tool required');
+  assert(xp.tools.some(t => t.name === 'anyharness_onboard'), 'codex plugin.json: anyharness_onboard tool required');
   for (const tool of xp.tools) {
     assert(typeof tool.sideEffects === 'boolean', `tool ${tool.name}: sideEffects must be boolean`);
     assert(typeof tool.idempotent === 'boolean', `tool ${tool.name}: idempotent must be boolean`);
@@ -553,6 +554,69 @@ try {
     }
   } finally {
     fs.rmSync(tmpPy, { recursive: true, force: true });
+  }
+}
+
+// ── 16. onboard.mjs: combined scan + analyze → seedCandidates round-trip ─────
+
+{
+  const fixtureRoot = path.resolve('test/fixtures/spring-project');
+
+  const out = run('node', [script('onboard.mjs'), '--path', fixtureRoot, '--json']);
+  const report = JSON.parse(out);
+
+  // Shape assertions
+  assert(report.stack === 'java-spring', `onboard: stack must be java-spring, got ${report.stack}`);
+  assert(report.detectedBy === 'auto', `onboard: detectedBy must be auto, got ${report.detectedBy}`);
+  assert(report.needsLLMAnalysis === false, 'onboard: Spring must not need LLM analysis');
+
+  // scanResult
+  assert(Array.isArray(report.scanResult.stacks), 'onboard: scanResult.stacks must be array');
+  assert(report.scanResult.stacks.includes('java'), 'onboard: scanResult must detect java stack');
+
+  // analysisResult
+  assert(report.analysisResult.riskCount >= 6,
+    `onboard: analysisResult.riskCount must be >= 6, got ${report.analysisResult.riskCount}`);
+  assert((report.analysisResult.counts.blocker || 0) >= 1,
+    'onboard: analysisResult must have >= 1 blocker');
+
+  // seedCandidates
+  assert(report.seedCandidates.trigger === 'initial-onboarding',
+    'onboard: seedCandidates.trigger must be initial-onboarding');
+  assert(Array.isArray(report.seedCandidates.candidates) && report.seedCandidates.candidates.length >= 6,
+    `onboard: seedCandidates must have >= 6 candidates, got ${report.seedCandidates.candidates.length}`);
+  assert(report.seedCandidates.candidates.every(c => typeof c.type === 'string'),
+    'onboard: every seed candidate must have a type');
+
+  // Round-trip: seedCandidates → propose-evolution → profile gets seeded from onboarding
+  const evRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'anyharness-onboard-rt-'));
+  try {
+    const profilePath = path.join(evRoot, '.anyharness', 'profile.json');
+    fs.mkdirSync(path.dirname(profilePath), { recursive: true });
+    fs.writeFileSync(profilePath, JSON.stringify({
+      version: '3.0.0', project: { name: 'onboard-rt', stage: 'Unknown' }, aiWorkflow: {},
+      stacks: ['java'], domainHypotheses: [], confirmedDomains: [], glossary: [],
+      domainModel: { entities: [], workflows: [], stateMachines: [] },
+      invariants: [], riskModel: { redZones: [], yellowZones: [], escalationRules: [] },
+      expertRoles: [], gates: [], testOracles: [], evidenceRequirements: [], unknowns: [],
+    }, null, 2));
+
+    const seedPath = path.join(evRoot, 'seed.json');
+    fs.writeFileSync(seedPath, JSON.stringify(report.seedCandidates));
+
+    const evolveOut = run('node', [script('propose-evolution.mjs'), '--findings', seedPath, '--confirm'], { cwd: evRoot });
+    const evolved = JSON.parse(evolveOut);
+    assert(evolved.action === 'evolved', `onboard round-trip: propose-evolution must return evolved, got ${evolved.action}`);
+    assert(evolved.accepted.added + evolved.accepted.newUnknowns + evolved.accepted.newGates >= 5,
+      'onboard round-trip: must accept >= 5 candidates from seed');
+
+    const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+    assert(profile.invariants.length >= 1 || profile.unknowns.length >= 1 || profile.gates.length >= 1,
+      'onboard round-trip: profile must be seeded with at least one risk-derived entry');
+    assert(Array.isArray(profile.learningHistory) && profile.learningHistory[0].trigger === 'initial-onboarding',
+      'onboard round-trip: learningHistory trigger must be initial-onboarding');
+  } finally {
+    fs.rmSync(evRoot, { recursive: true, force: true });
   }
 }
 

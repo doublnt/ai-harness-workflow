@@ -43,9 +43,9 @@ Activate for any of these user intents (exact wording is not required):
 10. For review tasks, output Summary → Blockers → Needs Changes → Suggestions → Unknowns → Verdict → Learning Candidates.
 11. Never mutate `.anyharness/profile.json` from review findings without explicit user confirmation — present Learning Candidates first, then run `propose-evolution.mjs --confirm` only after the user agrees.
 
-## Default workflow: initialize or adopt
+## Default workflow: new project
 
-Full details in `references/operating-model.md`. Summary:
+For a project with little code where architecture extraction would find nothing useful:
 
 1. Read-only scan (`scripts/scan-project.mjs .`).
 2. Detect AI workflow, stacks, domain signals.
@@ -55,6 +55,33 @@ Full details in `references/operating-model.md`. Summary:
 6. Write profile after confirmation (`scripts/write-profile.mjs --confirm`).
 7. Write native prompt surfaces (`scripts/write-native-prompts.mjs --target both --profile .anyharness/profile.json`).
 8. Offer optional local enforcement separately.
+
+## Default workflow: onboard existing project
+
+For an existing project with real code, use `onboard.mjs` — it combines scan +
+architecture analysis in one pass so you can present everything together and write
+the profile seeded with real risk findings in a **single confirmation**.
+
+```
+scripts/onboard.mjs [--path <dir>] [--json]
+```
+
+Output contains three sections:
+
+- **`scanResult`** — stacks, domain signals, AI workflow files
+- **`analysisResult`** — risk findings (Path A/C) or sampled files (Path B)
+- **`seedCandidates`** — Learning Candidates pre-formatted for `propose-evolution.mjs`
+
+Workflow after running `onboard.mjs`:
+
+1. Present `scanResult.domainSignals` + `analysisResult.risks` together in one pass.
+2. For Path B (`needsLLMAnalysis: true`): read `sampledFiles` first, then produce Risk[] findings per `references/llm-extractor.md`.
+3. Ask focused residual questions — only what the analysis couldn't answer.
+4. Write profile: `scripts/write-profile.mjs --confirm` (domain knowledge).
+5. Seed risks into profile: write `seedCandidates` to a temp file, then `scripts/propose-evolution.mjs --findings <path> --confirm`.
+6. Write native prompt surfaces.
+
+This replaces the old three-step sequence (adopt → analyze → propose-evolution) with a single combined flow. The profile is initialized with both domain invariants AND architecture risk candidates in one shot.
 
 ## Default workflow: review
 
@@ -189,7 +216,8 @@ Load on demand:
 
 Use scripts only when the client supports tool/bash execution:
 
-- `scripts/analyze.mjs [--stack auto] [--path <dir>] [--save] [--json]` (**recommended** unified entry point)
+- `scripts/onboard.mjs [--path <dir>] [--json]` (**existing projects** — scan + analyze combined, seeded Learning Candidates)
+- `scripts/analyze.mjs [--stack auto] [--path <dir>] [--save] [--json]` (architecture analysis only)
 - `scripts/suggest-stack-config.mjs [--path <dir>] [--save] [--confirm]` (B→C upgrade: generate starter stack-config.json)
 - `scripts/scan-project.mjs [path]`
 - `scripts/collect-diff.mjs [--mode staged|unstaged|both]`
